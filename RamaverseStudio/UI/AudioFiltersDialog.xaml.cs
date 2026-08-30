@@ -75,6 +75,17 @@ namespace RamaverseStudio.UI
             ChkLimiter.IsChecked = _settings.LimiterEnabled;
             SliderLimiterThreshold.Value = _settings.LimiterThresholdDb;
             TxtLimiterThresholdVal.Text = $"{_settings.LimiterThresholdDb:F1} dB";
+
+            // Auto-Ducking
+            ChkAutoDucking.IsChecked = _settings.AutoDuckingEnabled;
+            SliderDuckingThreshold.Value = _settings.DuckingThresholdDb;
+            SliderDuckingReduction.Value = _settings.DuckingReductionDb;
+            SliderDuckingAttack.Value = _settings.DuckingAttackMs;
+            SliderDuckingRelease.Value = _settings.DuckingReleaseMs;
+            TxtDuckingThresholdVal.Text = $"{_settings.DuckingThresholdDb:F0} dB";
+            TxtDuckingReductionVal.Text = $"{_settings.DuckingReductionDb:F0} dB";
+            TxtDuckingAttackVal.Text = $"{_settings.DuckingAttackMs:F0} ms";
+            TxtDuckingReleaseVal.Text = $"{_settings.DuckingReleaseMs:F0} ms";
         }
 
         private void OnMeterTick(object? sender, EventArgs e)
@@ -152,6 +163,16 @@ namespace RamaverseStudio.UI
             _settings.LimiterEnabled = ChkLimiter.IsChecked == true;
             _settings.LimiterThresholdDb = SliderLimiterThreshold.Value;
             TxtLimiterThresholdVal.Text = $"{SliderLimiterThreshold.Value:F1} dB";
+
+            _settings.AutoDuckingEnabled = ChkAutoDucking.IsChecked == true;
+            _settings.DuckingThresholdDb = SliderDuckingThreshold.Value;
+            _settings.DuckingReductionDb = SliderDuckingReduction.Value;
+            _settings.DuckingAttackMs = SliderDuckingAttack.Value;
+            _settings.DuckingReleaseMs = SliderDuckingRelease.Value;
+            TxtDuckingThresholdVal.Text = $"{SliderDuckingThreshold.Value:F0} dB";
+            TxtDuckingReductionVal.Text = $"{SliderDuckingReduction.Value:F0} dB";
+            TxtDuckingAttackVal.Text = $"{SliderDuckingAttack.Value:F0} ms";
+            TxtDuckingReleaseVal.Text = $"{SliderDuckingRelease.Value:F0} ms";
         }
 
         private void OnDoneClicked(object sender, RoutedEventArgs e)

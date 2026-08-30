@@ -41,6 +41,7 @@ namespace RamaverseStudio.Audio
 
         // Thread-safe circular queue for Desktop Loopback samples to mix with Mic
         private readonly ConcurrentQueue<float> _desktopSampleQueue = new ConcurrentQueue<float>();
+        private float _duckingGain = 1.0f;
 
         // Reusable audio buffer to eliminate GC allocations
         private byte[] _outputBytesBuffer = new byte[65536];
@@ -266,6 +267,13 @@ namespace RamaverseStudio.Audio
             double limThresh = FilterSettings.LimiterThresholdDb;
             double limRel = FilterSettings.LimiterReleaseMs;
 
+            // Auto-Ducking precalculations
+            bool duckEnabled = FilterSettings.AutoDuckingEnabled;
+            float duckThreshLinear = (float)Math.Pow(10.0, FilterSettings.DuckingThresholdDb / 20.0);
+            float duckReductionLinear = (float)Math.Pow(10.0, FilterSettings.DuckingReductionDb / 20.0);
+            float duckAttCoeff = (float)(1.0 - Math.Exp(-1.0 / (Math.Max(1.0, FilterSettings.DuckingAttackMs) * 0.001 * _sampleRate)));
+            float duckRelCoeff = (float)(1.0 - Math.Exp(-1.0 / (Math.Max(10.0, FilterSettings.DuckingReleaseMs) * 0.001 * _sampleRate)));
+
             for (int i = 0; i < sampleCount; i++)
             {
                 int channel = i % _channels; // 0 = Left, 1 = Right
@@ -322,9 +330,18 @@ namespace RamaverseStudio.Audio
                 if (absSample > maxAbsSample) maxAbsSample = absSample;
                 sumSquares += sample * sample;
 
-                // Mix Desktop Loopback audio sample
+                // Mix Desktop Loopback audio sample with Auto-Ducking
                 if (_desktopSampleQueue.TryDequeue(out float desktopSample))
                 {
+                    if (duckEnabled)
+                    {
+                        bool isSpeaking = !isMuted && absSample > duckThreshLinear;
+                        float targetDucking = isSpeaking ? duckReductionLinear : 1.0f;
+                        float coeff = isSpeaking ? duckAttCoeff : duckRelCoeff;
+                        _duckingGain += (targetDucking - _duckingGain) * coeff;
+                        desktopSample *= _duckingGain;
+                    }
+
                     sample += desktopSample;
                 }
 

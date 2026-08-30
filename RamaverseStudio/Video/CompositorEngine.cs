@@ -54,6 +54,10 @@ namespace RamaverseStudio.Video
 
         // Output Frame Event for Recording & Streaming Engines (Raw BGRA32, width, height, stride)
         public event Action<byte[], int, int, int>? FrameComposited;
+        public Func<float>? AudioPeakLevelProvider { get; set; }
+
+        private readonly float[] _visualizerBands = new float[24];
+        private readonly Random _visRandom = new Random();
 
         private readonly object _renderLock = new object();
 
@@ -328,6 +332,11 @@ namespace RamaverseStudio.Video
                         layerBmp = GetCachedColorBitmap(src);
                         shouldDisposeBmp = false;
                         break;
+
+                    case SourceType.AudioVisualizer:
+                        layerBmp = RenderAudioVisualizer(src);
+                        shouldDisposeBmp = true;
+                        break;
                 }
 
                 if (layerBmp != null)
@@ -485,6 +494,44 @@ namespace RamaverseStudio.Video
             }
 
             _textCache[key] = bmp;
+            return bmp;
+        }
+
+        private Bitmap RenderAudioVisualizer(SourceItem src)
+        {
+            int w = Math.Max(64, (int)src.Width);
+            int h = Math.Max(32, (int)src.Height);
+            var bmp = new Bitmap(w, h, PixelFormat.Format32bppArgb);
+
+            using (var g = Graphics.FromImage(bmp))
+            {
+                g.SmoothingMode = SmoothingMode.AntiAlias;
+                g.Clear(System.Drawing.Color.Transparent);
+
+                float peakDb = AudioPeakLevelProvider?.Invoke() ?? -60.0f;
+                float normLevel = Math.Clamp((peakDb + 60.0f) / 60.0f, 0.0f, 1.0f);
+
+                int barCount = 20;
+                float barWidth = (float)w / barCount;
+                float spacing = Math.Max(2f, barWidth * 0.25f);
+                float actualBarW = Math.Max(2f, barWidth - spacing);
+
+                for (int i = 0; i < barCount; i++)
+                {
+                    float freqWeight = (float)Math.Sin((double)i / barCount * Math.PI);
+                    float targetH = (normLevel * (0.25f + 0.75f * freqWeight + (float)(_visRandom.NextDouble() * 0.3 * normLevel))) * h;
+
+                    _visualizerBands[i] = _visualizerBands[i] * 0.70f + targetH * 0.30f;
+                    float barH = Math.Clamp(_visualizerBands[i], 3.0f, h);
+
+                    float x = i * barWidth;
+                    float y = h - barH;
+
+                    using var brush = new SolidBrush(System.Drawing.Color.FromArgb(235, 255, 255, 255));
+                    g.FillRectangle(brush, x, y, actualBarW, barH);
+                }
+            }
+
             return bmp;
         }
 

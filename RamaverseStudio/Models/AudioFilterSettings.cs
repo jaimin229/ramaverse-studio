@@ -67,6 +67,13 @@ namespace RamaverseStudio.Models
         private double _bandpassHighHz = 3400.0;   // 1000 to 12000 Hz
         private bool _bandpassEnabled = false;
 
+        // 8. Auto-Ducking (Sidechain Game/Desktop Audio when Streamer Speaks)
+        private bool _autoDuckingEnabled = true;
+        private double _duckingThresholdDb = -36.0; // dB
+        private double _duckingReductionDb = -14.0; // dB (e.g. drop game volume by 14dB)
+        private double _duckingAttackMs = 25.0;     // ms
+        private double _duckingReleaseMs = 350.0;   // ms
+
         // Public Properties
         public bool NoiseSuppressionEnabled { get => _noiseSuppressionEnabled; set => SetField(ref _noiseSuppressionEnabled, value); }
         public double NoiseSuppressionAmountDb { get => _noiseSuppressionAmountDb; set => SetField(ref _noiseSuppressionAmountDb, value); }
@@ -92,6 +99,12 @@ namespace RamaverseStudio.Models
         public bool LimiterEnabled { get => _limiterEnabled; set => SetField(ref _limiterEnabled, value); }
         public double LimiterThresholdDb { get => _limiterThresholdDb; set => SetField(ref _limiterThresholdDb, value); }
         public double LimiterReleaseMs { get => _limiterReleaseMs; set => SetField(ref _limiterReleaseMs, value); }
+
+        public bool AutoDuckingEnabled { get => _autoDuckingEnabled; set => SetField(ref _autoDuckingEnabled, value); }
+        public double DuckingThresholdDb { get => _duckingThresholdDb; set => SetField(ref _duckingThresholdDb, value); }
+        public double DuckingReductionDb { get => _duckingReductionDb; set => SetField(ref _duckingReductionDb, value); }
+        public double DuckingAttackMs { get => _duckingAttackMs; set => SetField(ref _duckingAttackMs, value); }
+        public double DuckingReleaseMs { get => _duckingReleaseMs; set => SetField(ref _duckingReleaseMs, value); }
 
         public double InputGainDb { get => _inputGainDb; set => SetField(ref _inputGainDb, value); }
         public bool IsMuted { get => _isMuted; set => SetField(ref _isMuted, value); }
@@ -143,6 +156,11 @@ namespace RamaverseStudio.Models
             FormantShiftRatio = other.FormantShiftRatio;
             DistortionDrive = other.DistortionDrive;
             BandpassEnabled = other.BandpassEnabled;
+            AutoDuckingEnabled = other.AutoDuckingEnabled;
+            DuckingThresholdDb = other.DuckingThresholdDb;
+            DuckingReductionDb = other.DuckingReductionDb;
+            DuckingAttackMs = other.DuckingAttackMs;
+            DuckingReleaseMs = other.DuckingReleaseMs;
         }
 
         public double PitchShiftSemitones { get => _pitchShiftSemitones; set => SetField(ref _pitchShiftSemitones, value); }

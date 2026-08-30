@@ -113,7 +113,7 @@ namespace RamaverseStudio.Output
 
                 var psi = new ProcessStartInfo
                 {
-                    FileName = "ffmpeg",
+                    FileName = FFmpegPathResolver.GetFFmpegPath(),
                     Arguments = args,
                     UseShellExecute = false,
                     RedirectStandardInput = true,
@@ -192,7 +192,7 @@ namespace RamaverseStudio.Output
 
                         var secPsi = new ProcessStartInfo
                         {
-                            FileName = "ffmpeg",
+                            FileName = FFmpegPathResolver.GetFFmpegPath(),
                             Arguments = secArgs,
                             UseShellExecute = false,
                             RedirectStandardInput = true,

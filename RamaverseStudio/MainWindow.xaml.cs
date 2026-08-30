@@ -11,6 +11,8 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
+using System.Runtime.InteropServices;
+using System.Windows.Interop;
 using RamaverseStudio.Audio;
 using RamaverseStudio.AutoUpdate;
 using RamaverseStudio.Models;
@@ -60,6 +62,7 @@ namespace RamaverseStudio
 
             // 3. Connect Video & Audio Pipes
             _compositor.FrameComposited += OnFrameComposited;
+            _compositor.AudioPeakLevelProvider = () => _audioEngine.CurrentPeakDb;
             _audioEngine.AudioSamplesProcessed += OnAudioSamplesProcessed;
             _recordingEngine.StatsUpdated += OnRecordingStatsUpdated;
             _streamingEngine.StatsUpdated += OnStreamingStatsUpdated;
@@ -223,7 +226,72 @@ namespace RamaverseStudio
         }
         #endregion
 
-        #region Keyboard Shortcuts / Hotkeys
+        #region Global Win32 System Hotkeys & Local Shortcuts
+        [DllImport("user32.dll")]
+        private static extern bool RegisterHotKey(IntPtr hWnd, int id, uint fsModifiers, uint vk);
+
+        [DllImport("user32.dll")]
+        private static extern bool UnregisterHotKey(IntPtr hWnd, int id);
+
+        private const int HOTKEY_ID_RECORD = 9001;
+        private const int HOTKEY_ID_STREAM = 9002;
+        private const int HOTKEY_ID_SNAPSHOT = 9003;
+        private const int HOTKEY_ID_MUTE = 9004;
+
+        private const uint MOD_CONTROL = 0x0002;
+        private const uint MOD_SHIFT = 0x0004;
+        private const uint VK_R = 0x52;
+        private const uint VK_L = 0x4C;
+        private const uint VK_S = 0x53;
+        private const uint VK_M = 0x4D;
+        private const int WM_HOTKEY = 0x0312;
+
+        private HwndSource? _hwndSource;
+        private IntPtr _windowHandle = IntPtr.Zero;
+
+        protected override void OnSourceInitialized(EventArgs e)
+        {
+            base.OnSourceInitialized(e);
+            var helper = new WindowInteropHelper(this);
+            _windowHandle = helper.Handle;
+            _hwndSource = HwndSource.FromHwnd(_windowHandle);
+            _hwndSource?.AddHook(HwndHook);
+
+            // Register System-Wide Background Hotkeys (Work even when minimized or inside a full-screen game)
+            RegisterHotKey(_windowHandle, HOTKEY_ID_RECORD, MOD_CONTROL | MOD_SHIFT, VK_R);
+            RegisterHotKey(_windowHandle, HOTKEY_ID_STREAM, MOD_CONTROL | MOD_SHIFT, VK_L);
+            RegisterHotKey(_windowHandle, HOTKEY_ID_SNAPSHOT, MOD_CONTROL | MOD_SHIFT, VK_S);
+            RegisterHotKey(_windowHandle, HOTKEY_ID_MUTE, MOD_CONTROL | MOD_SHIFT, VK_M);
+        }
+
+        private IntPtr HwndHook(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
+        {
+            if (msg == WM_HOTKEY)
+            {
+                int id = wParam.ToInt32();
+                switch (id)
+                {
+                    case HOTKEY_ID_RECORD:
+                        OnRecordToggleClicked(this, new RoutedEventArgs());
+                        handled = true;
+                        break;
+                    case HOTKEY_ID_STREAM:
+                        OnStreamToggleClicked(this, new RoutedEventArgs());
+                        handled = true;
+                        break;
+                    case HOTKEY_ID_SNAPSHOT:
+                        OnSnapshotClicked(this, new RoutedEventArgs());
+                        handled = true;
+                        break;
+                    case HOTKEY_ID_MUTE:
+                        OnMuteMicClicked(this, new RoutedEventArgs());
+                        handled = true;
+                        break;
+                }
+            }
+            return IntPtr.Zero;
+        }
+
         private void OnWindowKeyDown(object sender, KeyEventArgs e)
         {
             // Do not intercept hotkeys if user is currently typing in a text box
@@ -1073,6 +1141,14 @@ namespace RamaverseStudio
 
         private void OnMainWindowClosed(object? sender, EventArgs e)
         {
+            if (_windowHandle != IntPtr.Zero)
+            {
+                UnregisterHotKey(_windowHandle, HOTKEY_ID_RECORD);
+                UnregisterHotKey(_windowHandle, HOTKEY_ID_STREAM);
+                UnregisterHotKey(_windowHandle, HOTKEY_ID_SNAPSHOT);
+                UnregisterHotKey(_windowHandle, HOTKEY_ID_MUTE);
+            }
+
             SaveProjectState();
             _uiTimer.Stop();
             _recordingEngine.Dispose();

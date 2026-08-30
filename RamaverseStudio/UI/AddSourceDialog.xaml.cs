@@ -117,6 +117,7 @@ namespace RamaverseStudio.UI
             PanelMediaFile.Visibility = Visibility.Collapsed;
             PanelTextOverlay.Visibility = Visibility.Collapsed;
             PanelColorSource.Visibility = Visibility.Collapsed;
+            PanelAudioVisualizer.Visibility = Visibility.Collapsed;
 
             switch (tag)
             {
@@ -151,6 +152,10 @@ namespace RamaverseStudio.UI
                 case "ColorSource":
                     PanelColorSource.Visibility = Visibility.Visible;
                     TxtSourceName.Text = "Solid Background";
+                    break;
+                case "AudioVisualizer":
+                    PanelAudioVisualizer.Visibility = Visibility.Visible;
+                    TxtSourceName.Text = "Audio Spectrum Visualizer";
                     break;
             }
         }
@@ -267,6 +272,14 @@ namespace RamaverseStudio.UI
                     src.SolidColor = _selectedSolidColor;
                     src.Width = 1920;
                     src.Height = 1080;
+                    break;
+
+                case "AudioVisualizer":
+                    src.Type = SourceType.AudioVisualizer;
+                    src.Width = 600;
+                    src.Height = 120;
+                    src.X = 660;
+                    src.Y = 880;
                     break;
             }
 

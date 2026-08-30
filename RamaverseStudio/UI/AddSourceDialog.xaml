@@ -66,6 +66,7 @@
                     <ListBoxItem Content="Image Overlay" Tag="ImageOverlay"/>
                     <ListBoxItem Content="Text Overlay (GDI+)" Tag="TextOverlay"/>
                     <ListBoxItem Content="Solid Color Fill" Tag="ColorSource"/>
+                    <ListBoxItem Content="Audio Spectrum Visualizer" Tag="AudioVisualizer"/>
                 </ListBox>
             </Border>
 
@@ -75,6 +76,16 @@
                     <!-- Source Name -->
                     <TextBlock Text="SOURCE NAME" FontSize="10" FontWeight="Bold" Foreground="#888888" Margin="0,0,0,5"/>
                     <TextBox x:Name="TxtSourceName" Text="Display Capture" Margin="0,0,0,16"/>
+
+                    <!-- Panel for Audio Visualizer -->
+                    <StackPanel x:Name="PanelAudioVisualizer" Visibility="Collapsed">
+                        <Border Background="#121212" BorderBrush="#262626" BorderThickness="1" CornerRadius="4" Padding="12">
+                            <StackPanel>
+                                <TextBlock Text="🎵 Real-Time Audio Spectrum Visualizer" FontWeight="Bold" FontSize="12" Foreground="#FFFFFF" Margin="0,0,0,6"/>
+                                <TextBlock Text="Renders dynamic animated audio frequency bars that oscillate in sync with your microphone speech and game soundtrack. Move and resize it freely on canvas." FontSize="11" Foreground="#AAAAAA" TextWrapping="Wrap" LineHeight="16"/>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
 
                     <!-- Panel for Display Capture -->
                     <StackPanel x:Name="PanelDisplayCapture">

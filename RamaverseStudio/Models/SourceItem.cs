@@ -15,6 +15,7 @@ namespace RamaverseStudio.Models
         ImageOverlay,       // PNG/JPG
         TextOverlay,        // GDI+ Text
         ColorSource,        // Solid color
+        AudioVisualizer,    // Live Audio Spectrum / Waveform Bars
         AudioInputCapture,  // Mic
         AudioOutputCapture  // Desktop audio
     }
