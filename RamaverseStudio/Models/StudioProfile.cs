@@ -57,12 +57,20 @@ namespace RamaverseStudio.Models
         private double _micVolume = 1.0;
         private double _desktopVolume = 0.8;
 
-        // Streaming Settings
+        // Streaming Settings (Primary: YouTube / Twitch)
         private string _streamPlatform = "YouTube Live";
         private string _rtmpServerUrl = "rtmp://a.rtmp.youtube.com/live2";
         private string _streamKey = "";
         private int _streamBitrateKbps = 6000;
         private int _streamAudioBitrateKbps = 160;
+
+        // Dual-Streaming Settings (Secondary: TikTok / Instagram / Shorts 9:16)
+        private bool _dualStreamingEnabled = false;
+        private string _secondaryStreamPlatform = "TikTok Live";
+        private string _secondaryRtmpServerUrl = "rtmp://live.tiktok.com/app";
+        private string _secondaryStreamKey = "";
+        private int _secondaryStreamBitrateKbps = 4500;
+        private string _secondaryLayoutMode = "CenterCrop"; // "CenterCrop" or "LetterboxPad"
 
         public string Name { get => _name; set => SetField(ref _name, value); }
         public CanvasFormat CanvasFormat
@@ -109,6 +117,13 @@ namespace RamaverseStudio.Models
         public string StreamKey { get => _streamKey; set => SetField(ref _streamKey, value); }
         public int StreamBitrateKbps { get => _streamBitrateKbps; set => SetField(ref _streamBitrateKbps, value); }
         public int StreamAudioBitrateKbps { get => _streamAudioBitrateKbps; set => SetField(ref _streamAudioBitrateKbps, value); }
+
+        public bool DualStreamingEnabled { get => _dualStreamingEnabled; set => SetField(ref _dualStreamingEnabled, value); }
+        public string SecondaryStreamPlatform { get => _secondaryStreamPlatform; set => SetField(ref _secondaryStreamPlatform, value); }
+        public string SecondaryRtmpServerUrl { get => _secondaryRtmpServerUrl; set => SetField(ref _secondaryRtmpServerUrl, value); }
+        public string SecondaryStreamKey { get => _secondaryStreamKey; set => SetField(ref _secondaryStreamKey, value); }
+        public int SecondaryStreamBitrateKbps { get => _secondaryStreamBitrateKbps; set => SetField(ref _secondaryStreamBitrateKbps, value); }
+        public string SecondaryLayoutMode { get => _secondaryLayoutMode; set => SetField(ref _secondaryLayoutMode, value); }
 
         public void ApplyCanvasDimensions()
         {

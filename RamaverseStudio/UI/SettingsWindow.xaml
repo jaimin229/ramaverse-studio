@@ -4,7 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
-        Title="Settings — Ramaverse Studio" Height="640" Width="780"
+        Title="Settings — Ramaverse Studio" Height="680" Width="820"
         WindowStartupLocation="CenterOwner"
         Background="#000000" Foreground="#FFFFFF"
         ResizeMode="NoResize" WindowStyle="ToolWindow">
@@ -111,7 +111,8 @@
             <TabItem Header="STREAMING">
                 <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="20">
                     <StackPanel>
-                        <TextBlock Text="STREAMING PLATFORM" FontSize="11" FontWeight="Bold" Foreground="#888888" Margin="0,0,0,6"/>
+                        <!-- Primary Stream (Landscape YouTube/Twitch) -->
+                        <TextBlock Text="PRIMARY STREAMING PLATFORM (16:9 Landscape)" FontSize="11" FontWeight="Bold" Foreground="#888888" Margin="0,0,0,6"/>
                         <ComboBox x:Name="ComboStreamPlatform" Margin="0,0,0,16" SelectionChanged="OnStreamPlatformChanged">
                             <ComboBoxItem Content="YouTube Live"/>
                             <ComboBoxItem Content="Twitch"/>
@@ -119,10 +120,10 @@
                             <ComboBoxItem Content="Custom RTMP Server"/>
                         </ComboBox>
 
-                        <TextBlock Text="RTMP SERVER URL" FontSize="11" FontWeight="Bold" Foreground="#888888" Margin="0,0,0,6"/>
+                        <TextBlock Text="PRIMARY RTMP SERVER URL" FontSize="11" FontWeight="Bold" Foreground="#888888" Margin="0,0,0,6"/>
                         <TextBox x:Name="TxtRtmpUrl" Margin="0,0,0,16"/>
 
-                        <TextBlock Text="STREAM KEY (Required to Go Live)" FontSize="11" FontWeight="Bold" Foreground="#888888" Margin="0,0,0,6"/>
+                        <TextBlock Text="PRIMARY STREAM KEY" FontSize="11" FontWeight="Bold" Foreground="#888888" Margin="0,0,0,6"/>
                         <Grid Margin="0,0,0,16">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
@@ -140,14 +141,39 @@
                             <ComboBoxItem Content="3000 kbps (Low Bandwidth)"/>
                         </ComboBox>
 
+                        <!-- SIMULTANEOUS DUAL STREAMING (TikTok / Instagram / Shorts 9:16) -->
+                        <Border Background="#101010" BorderBrush="#2A2A2A" BorderThickness="1" CornerRadius="4" Padding="16" Margin="0,0,0,18">
+                            <StackPanel>
+                                <CheckBox x:Name="ChkDualStreaming" Content="ENABLE SIMULTANEOUS DUAL-STREAM (Vertical 9:16 TikTok / Instagram / Shorts)" FontWeight="Bold" FontSize="11" Foreground="#FFFFFF" Margin="0,0,0,12" Checked="OnDualStreamToggled" Unchecked="OnDualStreamToggled"/>
+                                
+                                <StackPanel x:Name="PanelDualStreamOptions">
+                                    <TextBlock Text="SECONDARY VERTICAL PLATFORM" FontSize="11" FontWeight="Bold" Foreground="#888888" Margin="0,0,0,6"/>
+                                    <ComboBox x:Name="ComboSecPlatform" Margin="0,0,0,14" SelectionChanged="OnSecPlatformChanged">
+                                        <ComboBoxItem Content="TikTok Live"/>
+                                        <ComboBoxItem Content="Instagram Live"/>
+                                        <ComboBoxItem Content="YouTube Shorts Live"/>
+                                        <ComboBoxItem Content="Custom Vertical RTMP"/>
+                                    </ComboBox>
+
+                                    <TextBlock Text="SECONDARY RTMP SERVER URL" FontSize="11" FontWeight="Bold" Foreground="#888888" Margin="0,0,0,6"/>
+                                    <TextBox x:Name="TxtSecRtmpUrl" Margin="0,0,0,14"/>
+
+                                    <TextBlock Text="SECONDARY STREAM KEY" FontSize="11" FontWeight="Bold" Foreground="#888888" Margin="0,0,0,6"/>
+                                    <TextBox x:Name="TxtSecStreamKey" Margin="0,0,0,14"/>
+
+                                    <TextBlock Text="VERTICAL CONVERSION MODE" FontSize="11" FontWeight="Bold" Foreground="#888888" Margin="0,0,0,6"/>
+                                    <ComboBox x:Name="ComboSecLayoutMode">
+                                        <ComboBoxItem Content="Center Crop 9:16 (Auto Zero-Copy Crop)"/>
+                                        <ComboBoxItem Content="Letterbox Fit (Preserve Full 16:9 Inside 9:16)"/>
+                                    </ComboBox>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+
                         <!-- Step-by-Step Guidance Box -->
                         <Border Background="#121212" BorderBrush="#2A2A2A" BorderThickness="1" CornerRadius="4" Padding="14">
                             <StackPanel>
-                                <TextBlock Text="💡 How to get your Stream Key:" FontSize="12" FontWeight="Bold" Foreground="#FFFFFF" Margin="0,0,0,8"/>
-                                <TextBlock Text="1. Click the button below to open your channel's streaming studio in your browser." FontSize="11" Foreground="#AAAAAA" Margin="0,0,0,4"/>
-                                <TextBlock Text="2. Copy the 'Stream Key' from your dashboard and paste it in the box above." FontSize="11" Foreground="#AAAAAA" Margin="0,0,0,4"/>
-                                <TextBlock Text="3. Click 'Save Changes' -> then click '📡 GO LIVE' on the main window to start streaming!" FontSize="11" Foreground="#AAAAAA" Margin="0,0,0,12"/>
-                                
+                                <TextBlock Text="💡 Quick Stream Dashboard Shortcuts:" FontSize="12" FontWeight="Bold" Foreground="#FFFFFF" Margin="0,0,0,8"/>
                                 <StackPanel Orientation="Horizontal">
                                     <Button Content="🔗 Open YouTube Live Studio" Padding="10,6" Margin="0,0,8,0" Click="OnOpenYouTubeDashboardClicked"/>
                                     <Button Content="🔗 Open Twitch Dashboard" Padding="10,6" Margin="0,0,8,0" Click="OnOpenTwitchDashboardClicked"/>

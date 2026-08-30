@@ -490,8 +490,19 @@ namespace RamaverseStudio
             Dispatcher.InvokeAsync(() =>
             {
                 TxtStreamUptime.Text = stats.Uptime.ToString(@"hh\:mm\:ss");
-                TxtStreamBitrate.Text = $"Bitrate: {stats.BitrateKbps:F0} kbps • {stats.DroppedFrames} drops";
+                TxtStreamBitrate.Text = $"Primary: {stats.BitrateKbps:F0} kbps • {stats.DroppedFrames} drops";
                 TxtStreamStatus.Text = stats.Status.ToString().ToUpper();
+
+                if (stats.IsDualStreamActive)
+                {
+                    TxtSecStreamBitrate.Visibility = Visibility.Visible;
+                    TxtSecStreamBitrate.Text = $"Vertical 9:16: {stats.SecondaryBitrateKbps:F0} kbps • {stats.SecondaryStatus.ToString().ToUpper()}";
+                    BtnStream.Content = "■ END DUAL STREAM";
+                }
+                else
+                {
+                    TxtSecStreamBitrate.Visibility = Visibility.Collapsed;
+                }
             });
         }
         #endregion

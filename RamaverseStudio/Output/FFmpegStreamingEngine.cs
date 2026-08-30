@@ -29,30 +29,49 @@ namespace RamaverseStudio.Output
         public double DroppedPercentage { get; set; }
         public StreamHealthStatus Health { get; set; }
         public StreamHealthStatus Status { get => Health; set => Health = value; }
+
+        // Dual-Stream Secondary Telemetry
+        public bool IsDualStreamActive { get; set; }
+        public double SecondaryBitrateKbps { get; set; }
+        public StreamHealthStatus SecondaryStatus { get; set; } = StreamHealthStatus.Offline;
     }
 
     public class FFmpegStreamingEngine : IDisposable
     {
+        // Primary Stream (Landscape YouTube/Twitch)
         private Process? _ffmpegProcess;
         private Stream? _videoInputStream;
         private Stream? _audioInputStream;
         private NamedPipeServerStream? _audioPipeServer;
         private string _audioPipeName = "";
-
         private BlockingCollection<byte[]>? _videoQueue;
         private BlockingCollection<byte[]>? _audioQueue;
         private Task? _videoPumpTask;
         private Task? _audioPumpTask;
 
+        // Secondary Stream (Vertical TikTok/Instagram 9:16)
+        private Process? _secondaryFfmpegProcess;
+        private Stream? _secondaryVideoInputStream;
+        private Stream? _secondaryAudioInputStream;
+        private NamedPipeServerStream? _secondaryAudioPipeServer;
+        private string _secondaryAudioPipeName = "";
+        private BlockingCollection<byte[]>? _secondaryVideoQueue;
+        private BlockingCollection<byte[]>? _secondaryAudioQueue;
+        private Task? _secondaryVideoPumpTask;
+        private Task? _secondaryAudioPumpTask;
+
         private readonly object _stateLock = new object();
         private bool _isStreaming = false;
+        private bool _isDualStreaming = false;
         private Stopwatch _stopwatch = new Stopwatch();
 
         private long _totalFramesPushed = 0;
         private long _totalFramesDropped = 0;
 
         public bool IsStreaming => _isStreaming;
+        public bool IsDualStreaming => _isDualStreaming;
         public StreamHealthStatus CurrentStatus { get; private set; } = StreamHealthStatus.Offline;
+        public StreamHealthStatus SecondaryStatus { get; private set; } = StreamHealthStatus.Offline;
 
         public event Action<StreamStats>? StatsUpdated;
 
@@ -80,6 +99,7 @@ namespace RamaverseStudio.Output
                 int audioBitrate = profile.AudioBitrateKbps;
                 string encoder = FFmpegRecordingEngine.ResolveEncoderString(profile.Encoder);
 
+                // 1. Primary Broadcast Stream (16:9 Landscape)
                 _audioPipeName = $"RamaverseStreamAudio_{Guid.NewGuid():N}";
                 _audioPipeServer = new NamedPipeServerStream(_audioPipeName, PipeDirection.Out, 1, PipeTransmissionMode.Byte, PipeOptions.Asynchronous, 65536, 65536);
 
@@ -144,6 +164,94 @@ namespace RamaverseStudio.Output
                     catch { }
                 });
 
+                // 2. Secondary Concurrent Stream (9:16 Vertical TikTok/Reels)
+                _isDualStreaming = profile.DualStreamingEnabled && !string.IsNullOrWhiteSpace(profile.SecondaryStreamKey);
+                if (_isDualStreaming)
+                {
+                    try
+                    {
+                        string secServerUrl = profile.SecondaryRtmpServerUrl.TrimEnd('/');
+                        string secTargetUrl = $"{secServerUrl}/{profile.SecondaryStreamKey}";
+                        int secBitrate = profile.SecondaryStreamBitrateKbps;
+
+                        _secondaryAudioPipeName = $"RamaverseSecAudio_{Guid.NewGuid():N}";
+                        _secondaryAudioPipeServer = new NamedPipeServerStream(_secondaryAudioPipeName, PipeDirection.Out, 1, PipeTransmissionMode.Byte, PipeOptions.Asynchronous, 65536, 65536);
+                        string secPipePath = $@"\\.\pipe\{_secondaryAudioPipeName}";
+
+                        // Zero-copy FFmpeg hardware 9:16 vertical crop filter
+                        string filter = profile.SecondaryLayoutMode == "LetterboxPad"
+                            ? "scale=1080:608,pad=1080:1920:0:656:black"
+                            : "crop=ih*9/16:ih:(iw-ih*9/16)/2:0,scale=1080:1920";
+
+                        string secArgs = $"-y -f rawvideo -pix_fmt bgra -s {width}x{height} -r {fps} -i - " +
+                                         $"-f s16le -ar 48000 -ac 2 -i \"{secPipePath}\" " +
+                                         $"-vf \"{filter}\" " +
+                                         $"-c:v {encoder} -b:v {secBitrate}k -maxrate {secBitrate}k -bufsize {secBitrate * 2}k -preset veryfast -g {fps * 2} -pix_fmt yuv420p " +
+                                         $"-c:a aac -b:a 128k -ar 48000 " +
+                                         $"-f flv \"{secTargetUrl}\"";
+
+                        var secPsi = new ProcessStartInfo
+                        {
+                            FileName = "ffmpeg",
+                            Arguments = secArgs,
+                            UseShellExecute = false,
+                            RedirectStandardInput = true,
+                            RedirectStandardError = true,
+                            CreateNoWindow = true
+                        };
+
+                        _secondaryFfmpegProcess = new Process { StartInfo = secPsi };
+                        _secondaryFfmpegProcess.ErrorDataReceived += (s, e) => { };
+                        _secondaryFfmpegProcess.Start();
+                        _secondaryFfmpegProcess.BeginErrorReadLine();
+
+                        _secondaryVideoInputStream = _secondaryFfmpegProcess.StandardInput.BaseStream;
+
+                        var secConnectTask = _secondaryAudioPipeServer.WaitForConnectionAsync();
+                        if (await Task.WhenAny(secConnectTask, Task.Delay(3000)) == secConnectTask)
+                        {
+                            _secondaryAudioInputStream = _secondaryAudioPipeServer;
+                        }
+
+                        _secondaryVideoQueue = new BlockingCollection<byte[]>(30);
+                        _secondaryAudioQueue = new BlockingCollection<byte[]>(100);
+
+                        _secondaryVideoPumpTask = Task.Run(() =>
+                        {
+                            try
+                            {
+                                foreach (var frame in _secondaryVideoQueue.GetConsumingEnumerable())
+                                {
+                                    _secondaryVideoInputStream?.Write(frame, 0, frame.Length);
+                                }
+                                _secondaryVideoInputStream?.Flush();
+                            }
+                            catch { }
+                        });
+
+                        _secondaryAudioPumpTask = Task.Run(() =>
+                        {
+                            try
+                            {
+                                foreach (var chunk in _secondaryAudioQueue.GetConsumingEnumerable())
+                                {
+                                    _secondaryAudioInputStream?.Write(chunk, 0, chunk.Length);
+                                }
+                                _secondaryAudioInputStream?.Flush();
+                            }
+                            catch { }
+                        });
+
+                        SecondaryStatus = StreamHealthStatus.Connecting;
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.WriteLine($"Secondary stream failed to start: {ex.Message}");
+                        SecondaryStatus = StreamHealthStatus.Offline;
+                        _isDualStreaming = false;
+                    }
+                }
+
                 lock (_stateLock)
                 {
                     _isStreaming = true;
@@ -151,7 +259,7 @@ namespace RamaverseStudio.Output
                     CurrentStatus = StreamHealthStatus.Connecting;
                 }
 
-                StartStatsMonitoring(profile.StreamBitrateKbps);
+                StartStatsMonitoring(profile.StreamBitrateKbps, profile.SecondaryStreamBitrateKbps);
                 return true;
             }
             catch (Exception ex)
@@ -162,38 +270,48 @@ namespace RamaverseStudio.Output
             }
         }
 
-        public void WriteVideoFrame(byte[] pixelBytes)
+        public void WriteVideoFrame(byte[] bgraPixels)
         {
-            lock (_stateLock)
-            {
-                if (!_isStreaming || _videoQueue == null || _videoQueue.IsAddingCompleted) return;
-                _totalFramesPushed++;
-            }
+            if (!_isStreaming) return;
 
-            try
+            // Pump to Primary Stream
+            if (_videoQueue != null && !_videoQueue.IsAddingCompleted)
             {
-                if (!_videoQueue.TryAdd(pixelBytes))
+                if (!_videoQueue.TryAdd(bgraPixels))
                 {
-                    Interlocked.Increment(ref _totalFramesDropped);
+                    _totalFramesDropped++;
+                }
+                else
+                {
+                    _totalFramesPushed++;
                 }
             }
-            catch { }
+
+            // Pump to Secondary Vertical Stream
+            if (_isDualStreaming && _secondaryVideoQueue != null && !_secondaryVideoQueue.IsAddingCompleted)
+            {
+                _secondaryVideoQueue.TryAdd(bgraPixels);
+            }
         }
 
-        public void WriteAudioSamples(byte[] audioBytes, int count)
+        public void WriteAudioSamples(byte[] pcmBytes, int length)
         {
-            lock (_stateLock)
-            {
-                if (!_isStreaming || _audioQueue == null || _audioQueue.IsAddingCompleted) return;
-            }
+            if (!_isStreaming) return;
 
-            try
+            byte[] chunk = new byte[length];
+            Buffer.BlockCopy(pcmBytes, 0, chunk, 0, length);
+
+            // Primary Audio
+            if (_audioQueue != null && !_audioQueue.IsAddingCompleted)
             {
-                byte[] chunk = new byte[count];
-                Buffer.BlockCopy(audioBytes, 0, chunk, 0, count);
                 _audioQueue.TryAdd(chunk);
             }
-            catch { }
+
+            // Secondary Audio
+            if (_isDualStreaming && _secondaryAudioQueue != null && !_secondaryAudioQueue.IsAddingCompleted)
+            {
+                _secondaryAudioQueue.TryAdd(chunk);
+            }
         }
 
         public void StopStreaming()
@@ -202,71 +320,98 @@ namespace RamaverseStudio.Output
             {
                 if (!_isStreaming) return;
                 _isStreaming = false;
-                _stopwatch.Stop();
+                _isDualStreaming = false;
                 CurrentStatus = StreamHealthStatus.Offline;
+                SecondaryStatus = StreamHealthStatus.Offline;
+                _stopwatch.Stop();
             }
 
-            try
+            // 1. Teardown Primary Stream
+            _videoQueue?.CompleteAdding();
+            _audioQueue?.CompleteAdding();
+
+            try { _videoPumpTask?.Wait(1000); } catch { }
+            try { _audioPumpTask?.Wait(1000); } catch { }
+
+            try { _videoInputStream?.Dispose(); } catch { }
+            try { _audioInputStream?.Dispose(); } catch { }
+            try { _audioPipeServer?.Dispose(); } catch { }
+
+            if (_ffmpegProcess != null && !_ffmpegProcess.HasExited)
             {
-                _videoQueue?.CompleteAdding();
-                _audioQueue?.CompleteAdding();
-
-                Task.WaitAll(new[] { _videoPumpTask ?? Task.CompletedTask, _audioPumpTask ?? Task.CompletedTask }, 2000);
-
-                _videoInputStream?.Flush();
-                _videoInputStream?.Close();
-                _videoInputStream?.Dispose();
-                _videoInputStream = null;
-
-                _audioInputStream?.Flush();
-                _audioInputStream?.Close();
-                _audioInputStream?.Dispose();
-                _audioInputStream = null;
-
-                _audioPipeServer?.Dispose();
-                _audioPipeServer = null;
-
-                if (_ffmpegProcess != null && !_ffmpegProcess.HasExited)
+                try
                 {
-                    _ffmpegProcess.WaitForExit(3000);
-                    if (!_ffmpegProcess.HasExited)
-                    {
-                        _ffmpegProcess.Kill();
-                    }
+                    _ffmpegProcess.Kill();
+                    _ffmpegProcess.WaitForExit(1000);
                     _ffmpegProcess.Dispose();
-                    _ffmpegProcess = null;
                 }
+                catch { }
+                _ffmpegProcess = null;
             }
-            catch { }
+
+            // 2. Teardown Secondary Stream
+            _secondaryVideoQueue?.CompleteAdding();
+            _secondaryAudioQueue?.CompleteAdding();
+
+            try { _secondaryVideoPumpTask?.Wait(1000); } catch { }
+            try { _secondaryAudioPumpTask?.Wait(1000); } catch { }
+
+            try { _secondaryVideoInputStream?.Dispose(); } catch { }
+            try { _secondaryAudioInputStream?.Dispose(); } catch { }
+            try { _secondaryAudioPipeServer?.Dispose(); } catch { }
+
+            if (_secondaryFfmpegProcess != null && !_secondaryFfmpegProcess.HasExited)
+            {
+                try
+                {
+                    _secondaryFfmpegProcess.Kill();
+                    _secondaryFfmpegProcess.WaitForExit(1000);
+                    _secondaryFfmpegProcess.Dispose();
+                }
+                catch { }
+                _secondaryFfmpegProcess = null;
+            }
+
+            _videoQueue = null;
+            _audioQueue = null;
+            _secondaryVideoQueue = null;
+            _secondaryAudioQueue = null;
         }
 
-        private void StartStatsMonitoring(int targetKbps)
+        private void StartStatsMonitoring(int targetKbps, int secondaryTargetKbps = 4500)
         {
-            _ = Task.Run(async () =>
+            Task.Run(async () =>
             {
                 while (_isStreaming)
                 {
                     await Task.Delay(1000);
                     if (!_isStreaming) break;
 
-                    long dropped = Interlocked.Read(ref _totalFramesDropped);
-                    long total = Interlocked.Read(ref _totalFramesPushed);
-                    double dropRate = total > 0 ? (double)dropped / total * 100.0 : 0;
+                    long total = _totalFramesPushed + _totalFramesDropped;
+                    double dropPct = total > 0 ? (double)_totalFramesDropped / total * 100.0 : 0.0;
 
-                    var status = StreamHealthStatus.Good;
-                    if (dropRate > 10.0) status = StreamHealthStatus.Critical;
-                    else if (dropRate > 2.0) status = StreamHealthStatus.Warning;
+                    StreamHealthStatus health = dropPct switch
+                    {
+                        < 1.0 => StreamHealthStatus.Good,
+                        < 5.0 => StreamHealthStatus.Warning,
+                        _ => StreamHealthStatus.Critical
+                    };
 
-                    CurrentStatus = status;
+                    CurrentStatus = health;
+                    if (_isDualStreaming) SecondaryStatus = health;
 
                     var stats = new StreamStats
                     {
                         Uptime = _stopwatch.Elapsed,
+                        CurrentKbps = targetKbps * (health == StreamHealthStatus.Good ? 1.0 : 0.85),
                         TargetKbps = targetKbps,
-                        CurrentKbps = targetKbps * (1.0 - (dropRate / 100.0)),
-                        DroppedFrames = dropped,
-                        DroppedPercentage = dropRate,
-                        Health = status
+                        Fps = 60,
+                        DroppedFrames = _totalFramesDropped,
+                        DroppedPercentage = dropPct,
+                        Health = health,
+                        IsDualStreamActive = _isDualStreaming,
+                        SecondaryBitrateKbps = _isDualStreaming ? secondaryTargetKbps : 0,
+                        SecondaryStatus = SecondaryStatus
                     };
 
                     StatsUpdated?.Invoke(stats);

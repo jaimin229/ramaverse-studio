@@ -77,7 +77,7 @@ namespace RamaverseStudio.UI
                 _ => 2
             };
 
-            // Streaming
+            // Primary Streaming
             TxtRtmpUrl.Text = string.IsNullOrWhiteSpace(_profile.RtmpServerUrl) ? "rtmp://a.rtmp.youtube.com/live2" : _profile.RtmpServerUrl;
             TxtStreamKey.Text = _profile.StreamKey;
             if (_profile.StreamPlatform.Contains("YouTube")) ComboStreamPlatform.SelectedIndex = 0;
@@ -94,6 +94,19 @@ namespace RamaverseStudio.UI
                 _ => 1
             };
 
+            // Dual Streaming (Vertical)
+            ChkDualStreaming.IsChecked = _profile.DualStreamingEnabled;
+            PanelDualStreamOptions.IsEnabled = _profile.DualStreamingEnabled;
+            TxtSecRtmpUrl.Text = string.IsNullOrWhiteSpace(_profile.SecondaryRtmpServerUrl) ? "rtmp://live.tiktok.com/app" : _profile.SecondaryRtmpServerUrl;
+            TxtSecStreamKey.Text = _profile.SecondaryStreamKey;
+
+            if (_profile.SecondaryStreamPlatform.Contains("TikTok")) ComboSecPlatform.SelectedIndex = 0;
+            else if (_profile.SecondaryStreamPlatform.Contains("Instagram")) ComboSecPlatform.SelectedIndex = 1;
+            else if (_profile.SecondaryStreamPlatform.Contains("Shorts")) ComboSecPlatform.SelectedIndex = 2;
+            else ComboSecPlatform.SelectedIndex = 3;
+
+            ComboSecLayoutMode.SelectedIndex = _profile.SecondaryLayoutMode == "LetterboxPad" ? 1 : 0;
+
             // Audio Devices
             var mics = AudioEngine.GetMicrophoneDevices();
             ComboMicDevices.Items.Clear();
@@ -104,6 +117,32 @@ namespace RamaverseStudio.UI
             ComboOutputDevices.Items.Clear();
             foreach (var o in outs) ComboOutputDevices.Items.Add(o);
             if (ComboOutputDevices.Items.Count > 0) ComboOutputDevices.SelectedIndex = 0;
+        }
+
+        private void OnDualStreamToggled(object sender, RoutedEventArgs e)
+        {
+            if (PanelDualStreamOptions != null)
+            {
+                PanelDualStreamOptions.IsEnabled = ChkDualStreaming.IsChecked == true;
+            }
+        }
+
+        private void OnSecPlatformChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (TxtSecRtmpUrl == null) return;
+
+            switch (ComboSecPlatform.SelectedIndex)
+            {
+                case 0: // TikTok
+                    TxtSecRtmpUrl.Text = "rtmp://live.tiktok.com/app";
+                    break;
+                case 1: // Instagram
+                    TxtSecRtmpUrl.Text = "rtmps://live-upload.instagram.com:443/rtmp";
+                    break;
+                case 2: // YouTube Shorts
+                    TxtSecRtmpUrl.Text = "rtmp://a.rtmp.youtube.com/live2";
+                    break;
+            }
         }
 
         private void OnBrowseFolderClicked(object sender, RoutedEventArgs e)
@@ -139,7 +178,6 @@ namespace RamaverseStudio.UI
 
         private void OnToggleKeyMaskClicked(object sender, RoutedEventArgs e)
         {
-            // Toggle key view indicator
             _isKeyRevealed = !_isKeyRevealed;
             BtnToggleKeyMask.Content = _isKeyRevealed ? "👁 Hide" : "👁 Show";
         }
@@ -247,7 +285,7 @@ namespace RamaverseStudio.UI
                 _ => 12000
             };
 
-            // Streaming
+            // Primary Streaming
             _profile.StreamPlatform = ((ComboBoxItem)ComboStreamPlatform.SelectedItem).Content.ToString() ?? "";
             _profile.RtmpServerUrl = TxtRtmpUrl.Text.Trim();
             _profile.StreamKey = TxtStreamKey.Text.Trim();
@@ -259,6 +297,13 @@ namespace RamaverseStudio.UI
                 3 => 3000,
                 _ => 6000
             };
+
+            // Dual Streaming (Vertical)
+            _profile.DualStreamingEnabled = ChkDualStreaming.IsChecked == true;
+            _profile.SecondaryStreamPlatform = ((ComboBoxItem)ComboSecPlatform.SelectedItem).Content.ToString() ?? "";
+            _profile.SecondaryRtmpServerUrl = TxtSecRtmpUrl.Text.Trim();
+            _profile.SecondaryStreamKey = TxtSecStreamKey.Text.Trim();
+            _profile.SecondaryLayoutMode = ComboSecLayoutMode.SelectedIndex == 1 ? "LetterboxPad" : "CenterCrop";
 
             DialogResult = true;
             Close();

@@ -637,11 +637,12 @@
                             <Border Background="{StaticResource CardBg}" BorderBrush="{StaticResource BorderDark}" BorderThickness="1" CornerRadius="4" Padding="10">
                                 <StackPanel>
                                     <Grid>
-                                        <TextBlock Text="LIVE STREAM" FontSize="10" FontWeight="Bold" Foreground="{StaticResource TextSecondary}"/>
+                                        <TextBlock x:Name="TxtStreamHeader" Text="LIVE STREAM" FontSize="10" FontWeight="Bold" Foreground="{StaticResource TextSecondary}"/>
                                         <TextBlock x:Name="TxtStreamStatus" Text="OFFLINE" HorizontalAlignment="Right" FontSize="10" FontWeight="Bold" Foreground="#888888"/>
                                     </Grid>
                                     <TextBlock x:Name="TxtStreamUptime" Text="00:00:00" FontSize="18" FontWeight="Bold" Foreground="#FFFFFF" Margin="0,3,0,1"/>
-                                    <TextBlock x:Name="TxtStreamBitrate" Text="Bitrate: 0 kbps • 0% drops" FontSize="10" Foreground="{StaticResource TextSecondary}"/>
+                                    <TextBlock x:Name="TxtStreamBitrate" Text="Primary: 0 kbps • 0% drops" FontSize="10" Foreground="{StaticResource TextSecondary}"/>
+                                    <TextBlock x:Name="TxtSecStreamBitrate" Text="Vertical 9:16: OFFLINE" FontSize="9" Foreground="#666666" Margin="0,2,0,0" Visibility="Collapsed"/>
                                 </StackPanel>
                             </Border>
                         </StackPanel>
