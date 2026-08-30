@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Pipes;
@@ -25,6 +26,11 @@ namespace RamaverseStudio.Output
         private NamedPipeServerStream? _audioPipeServer;
         private string _audioPipeName = "";
 
+        private BlockingCollection<byte[]>? _videoQueue;
+        private BlockingCollection<byte[]>? _audioQueue;
+        private Task? _videoPumpTask;
+        private Task? _audioPumpTask;
+
         private readonly object _stateLock = new object();
         private bool _isRecording = false;
         private bool _isPaused = false;
@@ -50,7 +56,7 @@ namespace RamaverseStudio.Output
                 VideoEncoder.SoftwareX264 => "libx264",
                 VideoEncoder.SoftwareX265 => "libx265",
                 VideoEncoder.SoftwareSvtAv1 => "libsvtav1",
-                _ => "libx264" // Auto fallback default
+                _ => "libx264"
             };
         }
 
@@ -76,13 +82,11 @@ namespace RamaverseStudio.Output
 
                 string encoder = ResolveEncoderString(profile.Encoder);
 
-                // Setup audio named pipe for simultaneous audio+video muxing into FFmpeg
                 _audioPipeName = $"RamaverseAudio_{Guid.NewGuid():N}";
                 _audioPipeServer = new NamedPipeServerStream(_audioPipeName, PipeDirection.Out, 1, PipeTransmissionMode.Byte, PipeOptions.Asynchronous, 65536, 65536);
 
                 string pipePath = $@"\\.\pipe\{_audioPipeName}";
 
-                // FFmpeg arguments: stdin for rawvideo, named pipe for s16le raw audio
                 string args = $"-y -f rawvideo -pix_fmt bgra -s {width}x{height} -r {fps} -i - " +
                               $"-f s16le -ar 48000 -ac 2 -i \"{pipePath}\" " +
                               $"-c:v {encoder} -b:v {videoBitrate}k -preset veryfast -pix_fmt yuv420p " +
@@ -99,23 +103,45 @@ namespace RamaverseStudio.Output
                 };
 
                 _ffmpegProcess = new Process { StartInfo = psi };
-                _ffmpegProcess.ErrorDataReceived += (s, e) =>
-                {
-                    // FFmpeg diagnostic telemetry can be captured here if needed
-                };
+                _ffmpegProcess.ErrorDataReceived += (s, e) => { };
 
                 _ffmpegProcess.Start();
                 _ffmpegProcess.BeginErrorReadLine();
 
                 _videoInputStream = _ffmpegProcess.StandardInput.BaseStream;
 
-                // Wait for named pipe connection in background task
-                _ = Task.Run(async () =>
+                var connectTask = _audioPipeServer.WaitForConnectionAsync();
+                if (await Task.WhenAny(connectTask, Task.Delay(3000)) == connectTask)
+                {
+                    _audioInputStream = _audioPipeServer;
+                }
+
+                _videoQueue = new BlockingCollection<byte[]>(30);
+                _audioQueue = new BlockingCollection<byte[]>(100);
+
+                // Start async pump threads
+                _videoPumpTask = Task.Run(() =>
                 {
                     try
                     {
-                        await _audioPipeServer.WaitForConnectionAsync();
-                        _audioInputStream = _audioPipeServer;
+                        foreach (var frame in _videoQueue.GetConsumingEnumerable())
+                        {
+                            _videoInputStream?.Write(frame, 0, frame.Length);
+                        }
+                        _videoInputStream?.Flush();
+                    }
+                    catch { }
+                });
+
+                _audioPumpTask = Task.Run(() =>
+                {
+                    try
+                    {
+                        foreach (var chunk in _audioQueue.GetConsumingEnumerable())
+                        {
+                            _audioInputStream?.Write(chunk, 0, chunk.Length);
+                        }
+                        _audioInputStream?.Flush();
                     }
                     catch { }
                 });
@@ -163,28 +189,30 @@ namespace RamaverseStudio.Output
         {
             lock (_stateLock)
             {
-                if (!_isRecording || _isPaused || _videoInputStream == null) return;
-
-                try
-                {
-                    _videoInputStream.Write(pixelBytes, 0, pixelBytes.Length);
-                }
-                catch { }
+                if (!_isRecording || _isPaused || _videoQueue == null || _videoQueue.IsAddingCompleted) return;
             }
+
+            try
+            {
+                _videoQueue.TryAdd(pixelBytes);
+            }
+            catch { }
         }
 
         public void WriteAudioSamples(byte[] audioBytes, int count)
         {
             lock (_stateLock)
             {
-                if (!_isRecording || _isPaused || _audioInputStream == null) return;
-
-                try
-                {
-                    _audioInputStream.Write(audioBytes, 0, count);
-                }
-                catch { }
+                if (!_isRecording || _isPaused || _audioQueue == null || _audioQueue.IsAddingCompleted) return;
             }
+
+            try
+            {
+                byte[] chunk = new byte[count];
+                Buffer.BlockCopy(audioBytes, 0, chunk, 0, count);
+                _audioQueue.TryAdd(chunk);
+            }
+            catch { }
         }
 
         public void StopRecording()
@@ -199,6 +227,11 @@ namespace RamaverseStudio.Output
 
             try
             {
+                _videoQueue?.CompleteAdding();
+                _audioQueue?.CompleteAdding();
+
+                Task.WaitAll(new[] { _videoPumpTask ?? Task.CompletedTask, _audioPumpTask ?? Task.CompletedTask }, 2000);
+
                 _videoInputStream?.Flush();
                 _videoInputStream?.Close();
                 _videoInputStream?.Dispose();

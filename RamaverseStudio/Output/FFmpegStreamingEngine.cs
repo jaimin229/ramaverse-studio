@@ -1,7 +1,9 @@
 using System;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Pipes;
+using System.Threading;
 using System.Threading.Tasks;
 using RamaverseStudio.Models;
 
@@ -11,18 +13,22 @@ namespace RamaverseStudio.Output
     {
         Offline,
         Connecting,
-        Excellent,
         Good,
-        Poor,
-        Disconnected
+        Warning,
+        Critical
     }
 
     public class StreamStats
     {
         public TimeSpan Uptime { get; set; }
-        public double BitrateKbps { get; set; }
-        public StreamHealthStatus Status { get; set; }
+        public double CurrentKbps { get; set; }
+        public double BitrateKbps { get => CurrentKbps; set => CurrentKbps = value; }
+        public double TargetKbps { get; set; }
+        public int Fps { get; set; }
         public long DroppedFrames { get; set; }
+        public double DroppedPercentage { get; set; }
+        public StreamHealthStatus Health { get; set; }
+        public StreamHealthStatus Status { get => Health; set => Health = value; }
     }
 
     public class FFmpegStreamingEngine : IDisposable
@@ -33,9 +39,17 @@ namespace RamaverseStudio.Output
         private NamedPipeServerStream? _audioPipeServer;
         private string _audioPipeName = "";
 
+        private BlockingCollection<byte[]>? _videoQueue;
+        private BlockingCollection<byte[]>? _audioQueue;
+        private Task? _videoPumpTask;
+        private Task? _audioPumpTask;
+
         private readonly object _stateLock = new object();
         private bool _isStreaming = false;
         private Stopwatch _stopwatch = new Stopwatch();
+
+        private long _totalFramesPushed = 0;
+        private long _totalFramesDropped = 0;
 
         public bool IsStreaming => _isStreaming;
         public StreamHealthStatus CurrentStatus { get; private set; } = StreamHealthStatus.Offline;
@@ -51,29 +65,31 @@ namespace RamaverseStudio.Output
 
             try
             {
+                if (string.IsNullOrWhiteSpace(profile.StreamKey))
+                {
+                    throw new InvalidOperationException("Stream Key is required to start streaming.");
+                }
+
+                string serverUrl = profile.RtmpServerUrl.TrimEnd('/');
+                string targetUrl = $"{serverUrl}/{profile.StreamKey}";
+
                 int width = profile.CanvasWidth;
                 int height = profile.CanvasHeight;
                 int fps = profile.Fps;
                 int videoBitrate = profile.StreamBitrateKbps;
-                int audioBitrate = profile.StreamAudioBitrateKbps;
-
+                int audioBitrate = profile.AudioBitrateKbps;
                 string encoder = FFmpegRecordingEngine.ResolveEncoderString(profile.Encoder);
-                string rtmpTarget = profile.RtmpServerUrl.TrimEnd('/') + "/" + profile.StreamKey.Trim();
-
-                if (string.IsNullOrWhiteSpace(profile.StreamKey))
-                {
-                    rtmpTarget = profile.RtmpServerUrl;
-                }
 
                 _audioPipeName = $"RamaverseStreamAudio_{Guid.NewGuid():N}";
                 _audioPipeServer = new NamedPipeServerStream(_audioPipeName, PipeDirection.Out, 1, PipeTransmissionMode.Byte, PipeOptions.Asynchronous, 65536, 65536);
+
                 string pipePath = $@"\\.\pipe\{_audioPipeName}";
 
-                // RTMP stream args
                 string args = $"-y -f rawvideo -pix_fmt bgra -s {width}x{height} -r {fps} -i - " +
                               $"-f s16le -ar 48000 -ac 2 -i \"{pipePath}\" " +
                               $"-c:v {encoder} -b:v {videoBitrate}k -maxrate {videoBitrate}k -bufsize {videoBitrate * 2}k -preset veryfast -g {fps * 2} -pix_fmt yuv420p " +
-                              $"-c:a aac -b:a {audioBitrate}k -f flv \"{rtmpTarget}\"";
+                              $"-c:a aac -b:a {audioBitrate}k -ar 48000 " +
+                              $"-f flv \"{targetUrl}\"";
 
                 var psi = new ProcessStartInfo
                 {
@@ -86,25 +102,44 @@ namespace RamaverseStudio.Output
                 };
 
                 _ffmpegProcess = new Process { StartInfo = psi };
-                _ffmpegProcess.ErrorDataReceived += (s, e) =>
-                {
-                    if (e.Data?.Contains("bitrate=") == true)
-                    {
-                        CurrentStatus = StreamHealthStatus.Excellent;
-                    }
-                };
+                _ffmpegProcess.ErrorDataReceived += (s, e) => { };
 
                 _ffmpegProcess.Start();
                 _ffmpegProcess.BeginErrorReadLine();
 
                 _videoInputStream = _ffmpegProcess.StandardInput.BaseStream;
 
-                _ = Task.Run(async () =>
+                var connectTask = _audioPipeServer.WaitForConnectionAsync();
+                if (await Task.WhenAny(connectTask, Task.Delay(3000)) == connectTask)
+                {
+                    _audioInputStream = _audioPipeServer;
+                }
+
+                _videoQueue = new BlockingCollection<byte[]>(30);
+                _audioQueue = new BlockingCollection<byte[]>(100);
+
+                _videoPumpTask = Task.Run(() =>
                 {
                     try
                     {
-                        await _audioPipeServer.WaitForConnectionAsync();
-                        _audioInputStream = _audioPipeServer;
+                        foreach (var frame in _videoQueue.GetConsumingEnumerable())
+                        {
+                            _videoInputStream?.Write(frame, 0, frame.Length);
+                        }
+                        _videoInputStream?.Flush();
+                    }
+                    catch { }
+                });
+
+                _audioPumpTask = Task.Run(() =>
+                {
+                    try
+                    {
+                        foreach (var chunk in _audioQueue.GetConsumingEnumerable())
+                        {
+                            _audioInputStream?.Write(chunk, 0, chunk.Length);
+                        }
+                        _audioInputStream?.Flush();
                     }
                     catch { }
                 });
@@ -131,26 +166,34 @@ namespace RamaverseStudio.Output
         {
             lock (_stateLock)
             {
-                if (!_isStreaming || _videoInputStream == null) return;
-                try
-                {
-                    _videoInputStream.Write(pixelBytes, 0, pixelBytes.Length);
-                }
-                catch { }
+                if (!_isStreaming || _videoQueue == null || _videoQueue.IsAddingCompleted) return;
+                _totalFramesPushed++;
             }
+
+            try
+            {
+                if (!_videoQueue.TryAdd(pixelBytes))
+                {
+                    Interlocked.Increment(ref _totalFramesDropped);
+                }
+            }
+            catch { }
         }
 
         public void WriteAudioSamples(byte[] audioBytes, int count)
         {
             lock (_stateLock)
             {
-                if (!_isStreaming || _audioInputStream == null) return;
-                try
-                {
-                    _audioInputStream.Write(audioBytes, 0, count);
-                }
-                catch { }
+                if (!_isStreaming || _audioQueue == null || _audioQueue.IsAddingCompleted) return;
             }
+
+            try
+            {
+                byte[] chunk = new byte[count];
+                Buffer.BlockCopy(audioBytes, 0, chunk, 0, count);
+                _audioQueue.TryAdd(chunk);
+            }
+            catch { }
         }
 
         public void StopStreaming()
@@ -165,6 +208,11 @@ namespace RamaverseStudio.Output
 
             try
             {
+                _videoQueue?.CompleteAdding();
+                _audioQueue?.CompleteAdding();
+
+                Task.WaitAll(new[] { _videoPumpTask ?? Task.CompletedTask, _audioPumpTask ?? Task.CompletedTask }, 2000);
+
                 _videoInputStream?.Flush();
                 _videoInputStream?.Close();
                 _videoInputStream?.Dispose();
@@ -180,7 +228,7 @@ namespace RamaverseStudio.Output
 
                 if (_ffmpegProcess != null && !_ffmpegProcess.HasExited)
                 {
-                    _ffmpegProcess.WaitForExit(2000);
+                    _ffmpegProcess.WaitForExit(3000);
                     if (!_ffmpegProcess.HasExited)
                     {
                         _ffmpegProcess.Kill();
@@ -192,7 +240,7 @@ namespace RamaverseStudio.Output
             catch { }
         }
 
-        private void StartStatsMonitoring(int targetBitrate)
+        private void StartStatsMonitoring(int targetKbps)
         {
             _ = Task.Run(async () =>
             {
@@ -201,12 +249,24 @@ namespace RamaverseStudio.Output
                     await Task.Delay(1000);
                     if (!_isStreaming) break;
 
+                    long dropped = Interlocked.Read(ref _totalFramesDropped);
+                    long total = Interlocked.Read(ref _totalFramesPushed);
+                    double dropRate = total > 0 ? (double)dropped / total * 100.0 : 0;
+
+                    var status = StreamHealthStatus.Good;
+                    if (dropRate > 10.0) status = StreamHealthStatus.Critical;
+                    else if (dropRate > 2.0) status = StreamHealthStatus.Warning;
+
+                    CurrentStatus = status;
+
                     var stats = new StreamStats
                     {
                         Uptime = _stopwatch.Elapsed,
-                        BitrateKbps = targetBitrate,
-                        Status = CurrentStatus,
-                        DroppedFrames = 0
+                        TargetKbps = targetKbps,
+                        CurrentKbps = targetKbps * (1.0 - (dropRate / 100.0)),
+                        DroppedFrames = dropped,
+                        DroppedPercentage = dropRate,
+                        Health = status
                     };
 
                     StatsUpdated?.Invoke(stats);
