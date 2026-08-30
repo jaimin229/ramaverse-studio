@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
@@ -12,6 +13,7 @@ namespace RamaverseStudio.UI
     {
         private readonly StudioProfile _profile;
         public StudioProfile Profile => _profile;
+        private bool _isKeyRevealed = true;
 
         public SettingsWindow(StudioProfile profile)
         {
@@ -76,7 +78,7 @@ namespace RamaverseStudio.UI
             };
 
             // Streaming
-            TxtRtmpUrl.Text = _profile.RtmpServerUrl;
+            TxtRtmpUrl.Text = string.IsNullOrWhiteSpace(_profile.RtmpServerUrl) ? "rtmp://a.rtmp.youtube.com/live2" : _profile.RtmpServerUrl;
             TxtStreamKey.Text = _profile.StreamKey;
             if (_profile.StreamPlatform.Contains("YouTube")) ComboStreamPlatform.SelectedIndex = 0;
             else if (_profile.StreamPlatform.Contains("Twitch")) ComboStreamPlatform.SelectedIndex = 1;
@@ -123,15 +125,53 @@ namespace RamaverseStudio.UI
 
             switch (ComboStreamPlatform.SelectedIndex)
             {
-                case 0:
+                case 0: // YouTube
                     TxtRtmpUrl.Text = "rtmp://a.rtmp.youtube.com/live2";
                     break;
-                case 1:
+                case 1: // Twitch
                     TxtRtmpUrl.Text = "rtmp://live.twitch.tv/app";
                     break;
-                case 2:
+                case 2: // Kick
                     TxtRtmpUrl.Text = "rtmps://fa723fc1b171.global-contribute.live-video.net";
                     break;
+            }
+        }
+
+        private void OnToggleKeyMaskClicked(object sender, RoutedEventArgs e)
+        {
+            // Toggle key view indicator
+            _isKeyRevealed = !_isKeyRevealed;
+            BtnToggleKeyMask.Content = _isKeyRevealed ? "👁 Hide" : "👁 Show";
+        }
+
+        private void OnOpenYouTubeDashboardClicked(object sender, RoutedEventArgs e)
+        {
+            OpenUrlInBrowser("https://studio.youtube.com/channel/live");
+        }
+
+        private void OnOpenTwitchDashboardClicked(object sender, RoutedEventArgs e)
+        {
+            OpenUrlInBrowser("https://dashboard.twitch.tv/settings/stream");
+        }
+
+        private void OnOpenKickDashboardClicked(object sender, RoutedEventArgs e)
+        {
+            OpenUrlInBrowser("https://kick.com/dashboard/stream");
+        }
+
+        private static void OpenUrlInBrowser(string url)
+        {
+            try
+            {
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = url,
+                    UseShellExecute = true
+                });
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Could not open browser: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
 

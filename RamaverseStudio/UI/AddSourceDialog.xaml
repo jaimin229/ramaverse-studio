@@ -8,62 +8,6 @@
         WindowStartupLocation="CenterOwner"
         Background="#000000" Foreground="#FFFFFF"
         ResizeMode="NoResize" WindowStyle="ToolWindow">
-    <Window.Resources>
-        <Style TargetType="Button">
-            <Setter Property="Background" Value="#141414"/>
-            <Setter Property="Foreground" Value="#FFFFFF"/>
-            <Setter Property="BorderBrush" Value="#2A2A2A"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Padding" Value="14,7"/>
-            <Setter Property="FontSize" Value="12"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border x:Name="Bd" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="4" Padding="{TemplateBinding Padding}">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="#242424"/>
-                                <Setter TargetName="Bd" Property="BorderBrush" Value="#666666"/>
-                            </Trigger>
-                            <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="#0A0A0A"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <Style TargetType="TextBox">
-            <Setter Property="Background" Value="#0F0F0F"/>
-            <Setter Property="Foreground" Value="#FFFFFF"/>
-            <Setter Property="BorderBrush" Value="#2A2A2A"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Padding" Value="8,6"/>
-            <Setter Property="FontSize" Value="12"/>
-            <Setter Property="VerticalContentAlignment" Value="Center"/>
-        </Style>
-
-        <Style TargetType="ComboBox">
-            <Setter Property="Background" Value="#0F0F0F"/>
-            <Setter Property="Foreground" Value="#FFFFFF"/>
-            <Setter Property="BorderBrush" Value="#2A2A2A"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Padding" Value="8,6"/>
-            <Setter Property="FontSize" Value="12"/>
-        </Style>
-
-        <Style TargetType="CheckBox">
-            <Setter Property="Foreground" Value="#CCCCCC"/>
-            <Setter Property="FontSize" Value="12"/>
-            <Setter Property="Cursor" Value="Hand"/>
-        </Style>
-    </Window.Resources>
-
     <Grid Margin="20">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
