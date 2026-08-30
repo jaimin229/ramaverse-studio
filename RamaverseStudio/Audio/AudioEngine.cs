@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using NAudio.CoreAudioApi;
@@ -14,14 +15,14 @@ namespace RamaverseStudio.Audio
         private readonly int _sampleRate = 48000;
         private readonly int _channels = 2;
 
-        // DSP Processors
-        private readonly NoiseGate _noiseGate;
-        private readonly BiQuadFilter _eqLow;
-        private readonly BiQuadFilter _eqMid;
-        private readonly BiQuadFilter _eqHigh;
-        private readonly DynamicCompressor _compressor;
-        private readonly AudioLimiter _limiter;
-        private readonly VoiceChangerDSP _voiceChanger;
+        // Dual-Channel (Stereo) DSP Processors
+        private readonly NoiseGate[] _noiseGate;
+        private readonly BiQuadFilter[] _eqLow;
+        private readonly BiQuadFilter[] _eqMid;
+        private readonly BiQuadFilter[] _eqHigh;
+        private readonly DynamicCompressor[] _compressor;
+        private readonly AudioLimiter[] _limiter;
+        private readonly VoiceChangerDSP[] _voiceChanger;
 
         public AudioFilterSettings FilterSettings { get; } = new AudioFilterSettings();
 
@@ -38,6 +39,12 @@ namespace RamaverseStudio.Audio
         // Desktop audio real WASAPI loopback peak
         public float DesktopPeakDb { get; private set; } = -60.0f;
 
+        // Thread-safe circular queue for Desktop Loopback samples to mix with Mic
+        private readonly ConcurrentQueue<float> _desktopSampleQueue = new ConcurrentQueue<float>();
+
+        // Reusable audio buffer to eliminate GC allocations
+        private byte[] _outputBytesBuffer = new byte[65536];
+
         // Event for raw processed PCM (16-bit 48kHz stereo) for FFmpeg recorder / streamer
         public event Action<byte[], int>? AudioSamplesProcessed;
 
@@ -45,13 +52,13 @@ namespace RamaverseStudio.Audio
 
         public AudioEngine()
         {
-            _noiseGate = new NoiseGate(_sampleRate);
-            _eqLow = new BiQuadFilter(_sampleRate);
-            _eqMid = new BiQuadFilter(_sampleRate);
-            _eqHigh = new BiQuadFilter(_sampleRate);
-            _compressor = new DynamicCompressor(_sampleRate);
-            _limiter = new AudioLimiter(_sampleRate);
-            _voiceChanger = new VoiceChangerDSP(_sampleRate);
+            _noiseGate = new[] { new NoiseGate(_sampleRate), new NoiseGate(_sampleRate) };
+            _eqLow = new[] { new BiQuadFilter(_sampleRate), new BiQuadFilter(_sampleRate) };
+            _eqMid = new[] { new BiQuadFilter(_sampleRate), new BiQuadFilter(_sampleRate) };
+            _eqHigh = new[] { new BiQuadFilter(_sampleRate), new BiQuadFilter(_sampleRate) };
+            _compressor = new[] { new DynamicCompressor(_sampleRate), new DynamicCompressor(_sampleRate) };
+            _limiter = new[] { new AudioLimiter(_sampleRate), new AudioLimiter(_sampleRate) };
+            _voiceChanger = new[] { new VoiceChangerDSP(_sampleRate), new VoiceChangerDSP(_sampleRate) };
 
             UpdateEqCoefficients();
             FilterSettings.PropertyChanged += (s, e) =>
@@ -65,9 +72,16 @@ namespace RamaverseStudio.Audio
 
         private void UpdateEqCoefficients()
         {
-            _eqLow.SetLowShelf(100.0f, (float)FilterSettings.EqLowGainDb);
-            _eqMid.SetPeaking(1200.0f, (float)FilterSettings.EqMidGainDb, 1.2f);
-            _eqHigh.SetHighShelf(8000.0f, (float)FilterSettings.EqHighGainDb);
+            float lowGain = (float)FilterSettings.EqLowGainDb;
+            float midGain = (float)FilterSettings.EqMidGainDb;
+            float highGain = (float)FilterSettings.EqHighGainDb;
+
+            for (int ch = 0; ch < _channels; ch++)
+            {
+                _eqLow[ch].SetLowShelf(100.0f, lowGain);
+                _eqMid[ch].SetPeaking(1200.0f, midGain, 1.2f);
+                _eqHigh[ch].SetHighShelf(8000.0f, highGain);
+            }
         }
 
         public static List<string> GetMicrophoneDevices()
@@ -105,6 +119,9 @@ namespace RamaverseStudio.Audio
         public void Start(int deviceIndex = -1)
         {
             Stop();
+
+            // Clear residual loopback queue
+            while (_desktopSampleQueue.TryDequeue(out _)) { }
 
             // 1. Microphone capture
             try
@@ -188,15 +205,22 @@ namespace RamaverseStudio.Audio
         {
             if (e.BytesRecorded == 0) return;
 
-            // IEEE Float 32-bit samples from WASAPI loopback
-            int sampleCount = e.BytesRecorded / 4;
+            // WASAPI Loopback delivers 32-bit Float samples
+            int floatCount = e.BytesRecorded / 4;
             float maxAbs = 0.0f;
+            float deskVol = (float)DesktopVolume;
 
-            for (int i = 0; i < sampleCount; i++)
+            for (int i = 0; i < floatCount; i++)
             {
-                float sample = BitConverter.ToSingle(e.Buffer, i * 4) * (float)DesktopVolume;
+                float sample = BitConverter.ToSingle(e.Buffer, i * 4) * deskVol;
                 float abs = Math.Abs(sample);
                 if (abs > maxAbs) maxAbs = abs;
+
+                // Enqueue for mixing with mic audio (limit queue depth to avoid latency drift)
+                if (_desktopSampleQueue.Count < 96000)
+                {
+                    _desktopSampleQueue.Enqueue(sample);
+                }
             }
 
             float db = maxAbs > 1e-5f ? (float)(20.0 * Math.Log10(maxAbs)) : -60.0f;
@@ -207,17 +231,44 @@ namespace RamaverseStudio.Audio
         {
             if (e.BytesRecorded == 0) return;
 
-            int sampleCount = e.BytesRecorded / 2; // 16-bit
-            byte[] outputBytes = new byte[e.BytesRecorded];
+            int sampleCount = e.BytesRecorded / 2; // 16-bit PCM count
+            if (_outputBytesBuffer.Length < e.BytesRecorded)
+            {
+                _outputBytesBuffer = new byte[e.BytesRecorded * 2];
+            }
 
             float maxAbsSample = 0.0f;
             double sumSquares = 0.0;
 
             float inputGainLinear = (float)(Math.Pow(10.0, FilterSettings.InputGainDb / 20.0) * MicVolume);
             bool isMuted = FilterSettings.IsMuted;
+            float noiseSuppressionFactor = FilterSettings.NoiseSuppressionEnabled ? (float)Math.Pow(10.0, FilterSettings.NoiseSuppressionAmountDb / 40.0) : 1.0f;
+
+            // Pre-cache filter enable flags for performance
+            bool nsEnabled = FilterSettings.NoiseSuppressionEnabled;
+            bool ngEnabled = FilterSettings.NoiseGateEnabled;
+            bool eqEnabled = FilterSettings.EqEnabled;
+            bool compEnabled = FilterSettings.CompressorEnabled;
+            bool vcEnabled = FilterSettings.VoiceChangerEnabled;
+            bool limEnabled = FilterSettings.LimiterEnabled;
+
+            double gateThresh = FilterSettings.GateThresholdDb;
+            double gateAtt = FilterSettings.GateAttackMs;
+            double gateHold = FilterSettings.GateHoldMs;
+            double gateRel = FilterSettings.GateReleaseMs;
+
+            double compThresh = FilterSettings.CompThresholdDb;
+            double compRatio = FilterSettings.CompRatio;
+            double compAtt = FilterSettings.CompAttackMs;
+            double compRel = FilterSettings.CompReleaseMs;
+            double compGain = FilterSettings.CompMakeupGainDb;
+
+            double limThresh = FilterSettings.LimiterThresholdDb;
+            double limRel = FilterSettings.LimiterReleaseMs;
 
             for (int i = 0; i < sampleCount; i++)
             {
+                int channel = i % _channels; // 0 = Left, 1 = Right
                 short rawShort = BitConverter.ToInt16(e.Buffer, i * 2);
                 float sample = (rawShort / 32768.0f) * inputGainLinear;
 
@@ -228,67 +279,61 @@ namespace RamaverseStudio.Audio
                 else
                 {
                     // 1. Noise Suppression
-                    if (FilterSettings.NoiseSuppressionEnabled && Math.Abs(sample) < 0.015f)
+                    if (nsEnabled && Math.Abs(sample) < 0.015f)
                     {
-                        float suppressionFactor = (float)Math.Pow(10.0, FilterSettings.NoiseSuppressionAmountDb / 40.0);
-                        sample *= suppressionFactor;
+                        sample *= noiseSuppressionFactor;
                     }
 
-                    // 2. Noise Gate
-                    if (FilterSettings.NoiseGateEnabled)
+                    // 2. Noise Gate (per-channel state)
+                    if (ngEnabled)
                     {
-                        sample = _noiseGate.Process(sample,
-                            FilterSettings.GateThresholdDb,
-                            FilterSettings.GateAttackMs,
-                            FilterSettings.GateHoldMs,
-                            FilterSettings.GateReleaseMs);
+                        sample = _noiseGate[channel].Process(sample, gateThresh, gateAtt, gateHold, gateRel);
                     }
 
-                    // 3. 3-Band Equalizer
-                    if (FilterSettings.EqEnabled)
+                    // 3. 3-Band Equalizer (per-channel state)
+                    if (eqEnabled)
                     {
-                        sample = _eqLow.Process(sample);
-                        sample = _eqMid.Process(sample);
-                        sample = _eqHigh.Process(sample);
+                        sample = _eqLow[channel].Process(sample);
+                        sample = _eqMid[channel].Process(sample);
+                        sample = _eqHigh[channel].Process(sample);
                     }
 
-                    // 4. Dynamic Compressor
-                    if (FilterSettings.CompressorEnabled)
+                    // 4. Dynamic Compressor (per-channel state)
+                    if (compEnabled)
                     {
-                        sample = _compressor.Process(sample,
-                            FilterSettings.CompThresholdDb,
-                            FilterSettings.CompRatio,
-                            FilterSettings.CompAttackMs,
-                            FilterSettings.CompReleaseMs,
-                            FilterSettings.CompMakeupGainDb);
+                        sample = _compressor[channel].Process(sample, compThresh, compRatio, compAtt, compRel, compGain);
                     }
 
-                    // 5. Voice Changer DSP
-                    if (FilterSettings.VoiceChangerEnabled)
+                    // 5. Voice Changer DSP (per-channel state)
+                    if (vcEnabled)
                     {
-                        sample = _voiceChanger.Process(sample, FilterSettings);
+                        sample = _voiceChanger[channel].Process(sample, FilterSettings);
                     }
 
-                    // 6. Brickwall Limiter
-                    if (FilterSettings.LimiterEnabled)
+                    // 6. Brickwall Limiter (per-channel state)
+                    if (limEnabled)
                     {
-                        sample = _limiter.Process(sample,
-                            FilterSettings.LimiterThresholdDb,
-                            FilterSettings.LimiterReleaseMs);
+                        sample = _limiter[channel].Process(sample, limThresh, limRel);
                     }
                 }
 
-                // Metering stats
+                // Metering stats (Microphone)
                 float absSample = Math.Abs(sample);
                 if (absSample > maxAbsSample) maxAbsSample = absSample;
                 sumSquares += sample * sample;
 
-                // Clamp to 16-bit PCM
+                // Mix Desktop Loopback audio sample
+                if (_desktopSampleQueue.TryDequeue(out float desktopSample))
+                {
+                    sample += desktopSample;
+                }
+
+                // Final Master Ceiling Clamp
                 sample = Math.Clamp(sample, -1.0f, 1.0f);
                 short outShort = (short)(sample * 32767.0f);
-                byte[] sampleBytes = BitConverter.GetBytes(outShort);
-                outputBytes[i * 2] = sampleBytes[0];
-                outputBytes[i * 2 + 1] = sampleBytes[1];
+
+                _outputBytesBuffer[i * 2] = (byte)(outShort & 0xFF);
+                _outputBytesBuffer[i * 2 + 1] = (byte)((outShort >> 8) & 0xFF);
             }
 
             // Calculate dBFS
@@ -313,8 +358,8 @@ namespace RamaverseStudio.Audio
                 }
             }
 
-            // Deliver real 16-bit PCM to recorder / streamer
-            AudioSamplesProcessed?.Invoke(outputBytes, outputBytes.Length);
+            // Deliver real 16-bit PCM stereo mixed master to FFmpeg recorder / streamer
+            AudioSamplesProcessed?.Invoke(_outputBytesBuffer, e.BytesRecorded);
         }
 
         public void Dispose()

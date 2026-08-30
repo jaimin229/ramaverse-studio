@@ -13,15 +13,15 @@
         KeyDown="OnWindowKeyDown">
 
     <Window.Resources>
-        <!-- Pure Black & White Palette -->
+        <!-- Pure Black & White Minimalist Palette -->
         <SolidColorBrush x:Key="BgDark" Color="#000000"/>
         <SolidColorBrush x:Key="PanelBg" Color="#0A0A0A"/>
         <SolidColorBrush x:Key="PanelHeaderBg" Color="#121212"/>
         <SolidColorBrush x:Key="CardBg" Color="#0E0E0E"/>
         <SolidColorBrush x:Key="BorderDark" Color="#222222"/>
         <SolidColorBrush x:Key="TextPrimary" Color="#FFFFFF"/>
-        <SolidColorBrush x:Key="TextSecondary" Color="#888888"/>
-        <SolidColorBrush x:Key="TextMuted" Color="#555555"/>
+        <SolidColorBrush x:Key="TextSecondary" Color="#AAAAAA"/>
+        <SolidColorBrush x:Key="TextMuted" Color="#777777"/>
 
         <!-- Universal Control Styles -->
         <Style TargetType="Button">
@@ -47,6 +47,9 @@
                             <Trigger Property="IsPressed" Value="True">
                                 <Setter TargetName="BtnBorder" Property="Background" Value="#0A0A0A"/>
                             </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="BtnBorder" Property="Opacity" Value="0.4"/>
+                            </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
@@ -66,6 +69,7 @@
         <Style TargetType="Slider">
             <Setter Property="VerticalAlignment" Value="Center"/>
             <Setter Property="Margin" Value="0,2"/>
+            <Setter Property="Cursor" Value="Hand"/>
         </Style>
 
         <Style TargetType="CheckBox">
@@ -113,10 +117,10 @@
                 <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
                     <Border Background="#121212" BorderBrush="{StaticResource BorderDark}" BorderThickness="1" CornerRadius="4" Padding="3">
                         <StackPanel Orientation="Horizontal">
-                            <Button x:Name="BtnFormat16x9" Content="16:9 Landscape" Padding="12,4" Margin="0,0,2,0" Background="#FFFFFF" Foreground="#000000" BorderBrush="#FFFFFF" FontWeight="Bold" Click="OnFormat16x9Clicked"/>
-                            <Button x:Name="BtnFormat9x16" Content="9:16 Shorts/Reels" Padding="12,4" Margin="0,0,2,0" Background="Transparent" Foreground="#888888" BorderBrush="Transparent" Click="OnFormat9x16Clicked"/>
-                            <Button x:Name="BtnFormatSquare" Content="1:1 Square" Padding="12,4" Margin="0,0,2,0" Background="Transparent" Foreground="#888888" BorderBrush="Transparent" Click="OnFormatSquareClicked"/>
-                            <Button x:Name="BtnFormatDual" Content="◫ Dual Canvas" Padding="12,4" Background="Transparent" Foreground="#888888" BorderBrush="Transparent" Click="OnFormatDualClicked"/>
+                            <Button x:Name="BtnFormat16x9" Content="16:9 Landscape" Padding="12,4" Margin="0,0,2,0" Background="#FFFFFF" Foreground="#000000" BorderBrush="#FFFFFF" FontWeight="Bold" ToolTip="Standard 16:9 Full Screen (1920x1080) for YouTube / Twitch" Click="OnFormat16x9Clicked"/>
+                            <Button x:Name="BtnFormat9x16" Content="9:16 Shorts/Reels" Padding="12,4" Margin="0,0,2,0" Background="Transparent" Foreground="#888888" BorderBrush="Transparent" ToolTip="Vertical 9:16 Canvas (1080x1920) for YouTube Shorts, Instagram Reels &amp; TikTok" Click="OnFormat9x16Clicked"/>
+                            <Button x:Name="BtnFormatSquare" Content="1:1 Square" Padding="12,4" Margin="0,0,2,0" Background="Transparent" Foreground="#888888" BorderBrush="Transparent" ToolTip="Square 1:1 Canvas (1080x1080) for Instagram Posts" Click="OnFormatSquareClicked"/>
+                            <Button x:Name="BtnFormatDual" Content="◫ Dual Canvas" Padding="12,4" Background="Transparent" Foreground="#888888" BorderBrush="Transparent" ToolTip="Simultaneous Dual Canvas View" Click="OnFormatDualClicked"/>
                         </StackPanel>
                     </Border>
                 </StackPanel>
@@ -124,19 +128,19 @@
                 <!-- Right Action Production Deck -->
                 <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
                     <!-- Snapshot button -->
-                    <Button x:Name="BtnSnapshot" Content="Snapshot" Margin="0,0,8,0" Padding="10,6" ToolTip="Take Instant Screenshot (Ctrl+S)" Click="OnSnapshotClicked"/>
+                    <Button x:Name="BtnSnapshot" Content="Snapshot" Margin="0,0,8,0" Padding="10,6" ToolTip="Take Instant Studio Screenshot (Ctrl+S)" Click="OnSnapshotClicked"/>
 
                     <!-- Pause Rec Button -->
-                    <Button x:Name="BtnPauseRec" Content="Pause" Margin="0,0,8,0" Padding="10,6" Visibility="Collapsed" Click="OnPauseRecClicked"/>
+                    <Button x:Name="BtnPauseRec" Content="Pause" Margin="0,0,8,0" Padding="10,6" Visibility="Collapsed" ToolTip="Pause Recording (Ctrl+P)" Click="OnPauseRecClicked"/>
 
                     <!-- Start/Stop Recording Button -->
-                    <Button x:Name="BtnRecord" Content="● RECORD" Background="#181818" BorderBrush="#383838" Foreground="#FFFFFF" Padding="14,6" Margin="0,0,8,0" FontWeight="Bold" Click="OnRecordToggleClicked"/>
+                    <Button x:Name="BtnRecord" Content="● RECORD" Background="#181818" BorderBrush="#444444" Foreground="#FFFFFF" Padding="14,6" Margin="0,0,8,0" FontWeight="Bold" ToolTip="Start Instant High-Quality MP4 Recording (Ctrl+R)" Click="OnRecordToggleClicked"/>
 
                     <!-- Go Live Streaming Button -->
-                    <Button x:Name="BtnStream" Content="📡 GO LIVE" Background="#181818" BorderBrush="#383838" Foreground="#FFFFFF" Padding="14,6" Margin="0,0,8,0" FontWeight="Bold" Click="OnStreamToggleClicked"/>
+                    <Button x:Name="BtnStream" Content="📡 GO LIVE" Background="#181818" BorderBrush="#444444" Foreground="#FFFFFF" Padding="14,6" Margin="0,0,8,0" FontWeight="Bold" ToolTip="Broadcast Live to YouTube, Twitch, or Kick (Ctrl+L)" Click="OnStreamToggleClicked"/>
 
                     <!-- Studio Settings -->
-                    <Button x:Name="BtnSettings" Content="Settings" Padding="10,6" Click="OnSettingsClicked"/>
+                    <Button x:Name="BtnSettings" Content="Settings" Padding="10,6" ToolTip="Open Studio Audio, Video &amp; Streaming Settings" Click="OnSettingsClicked"/>
                 </StackPanel>
             </Grid>
         </Border>
@@ -146,7 +150,7 @@
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="220" MinWidth="180" MaxWidth="300"/> <!-- Left: Scenes Panel -->
                 <ColumnDefinition Width="*"/>                                   <!-- Center: Live Canvas Preview -->
-                <ColumnDefinition Width="280" MinWidth="240" MaxWidth="360"/> <!-- Right: Properties & Filters Inspector -->
+                <ColumnDefinition Width="290" MinWidth="250" MaxWidth="380"/> <!-- Right: Properties & Filters Inspector -->
             </Grid.ColumnDefinitions>
 
             <!-- 2.1 LEFT PANEL: SCENES -->
@@ -161,8 +165,8 @@
                     <!-- Header -->
                     <Border Grid.Row="0" Background="{StaticResource PanelHeaderBg}" Padding="10,0">
                         <Grid VerticalAlignment="Center">
-                            <TextBlock Text="SCENES" FontSize="10" FontWeight="Bold" Foreground="{StaticResource TextSecondary}"/>
-                            <TextBlock Text="Fade" HorizontalAlignment="Right" FontSize="10" Foreground="#555555"/>
+                            <TextBlock Text="SCENES" FontSize="11" FontWeight="Bold" Foreground="{StaticResource TextSecondary}"/>
+                            <TextBlock Text="Fade" HorizontalAlignment="Right" FontSize="10" Foreground="#888888"/>
                         </Grid>
                     </Border>
 
@@ -190,11 +194,11 @@
                                             <ControlTemplate.Triggers>
                                                 <Trigger Property="IsSelected" Value="True">
                                                     <Setter TargetName="SceneBorder" Property="Background" Value="#222222"/>
-                                                    <Setter TargetName="SceneBorder" Property="BorderBrush" Value="#444444"/>
+                                                    <Setter TargetName="SceneBorder" Property="BorderBrush" Value="#555555"/>
                                                     <Setter Property="Foreground" Value="#FFFFFF"/>
                                                 </Trigger>
                                                 <Trigger Property="IsMouseOver" Value="True">
-                                                    <Setter TargetName="SceneBorder" Property="BorderBrush" Value="#333333"/>
+                                                    <Setter TargetName="SceneBorder" Property="BorderBrush" Value="#383838"/>
                                                 </Trigger>
                                             </ControlTemplate.Triggers>
                                         </ControlTemplate>
@@ -207,9 +211,9 @@
                     <!-- Scene Actions Toolbar -->
                     <Border Grid.Row="2" Background="{StaticResource PanelHeaderBg}" Padding="6,0">
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <Button Content="+ Add" Padding="8,3" Margin="0,0,4,0" ToolTip="Add Scene" Click="OnAddSceneClicked"/>
-                            <Button Content="- Del" Padding="8,3" Margin="0,0,4,0" ToolTip="Remove Scene" Click="OnDeleteSceneClicked"/>
-                            <Button Content="Clone" Padding="8,3" ToolTip="Duplicate Scene" Click="OnDuplicateSceneClicked"/>
+                            <Button Content="+ Add" Padding="8,3" Margin="0,0,4,0" ToolTip="Create New Scene" Click="OnAddSceneClicked"/>
+                            <Button Content="- Del" Padding="8,3" Margin="0,0,4,0" ToolTip="Remove Selected Scene" Click="OnDeleteSceneClicked"/>
+                            <Button Content="Clone" Padding="8,3" ToolTip="Duplicate Selected Scene" Click="OnDuplicateSceneClicked"/>
                         </StackPanel>
                     </Border>
                 </Grid>
@@ -233,8 +237,8 @@
                         </StackPanel>
 
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                            <CheckBox x:Name="ChkShowGuides" Content="Guides" Foreground="{StaticResource TextSecondary}" Margin="0,0,12,0" Checked="OnGuidesToggled" Unchecked="OnGuidesToggled"/>
-                            <Button Content="Fit Screen" Padding="6,2" FontSize="10" Click="OnFitScreenClicked"/>
+                            <CheckBox x:Name="ChkShowGuides" Content="Guides" Foreground="{StaticResource TextSecondary}" Margin="0,0,12,0" ToolTip="Toggle Safe Area &amp; Alignment Grid Guides" Checked="OnGuidesToggled" Unchecked="OnGuidesToggled"/>
+                            <Button Content="Fit Screen" Padding="8,3" FontSize="11" ToolTip="Center and fit preview to window" Click="OnFitScreenClicked"/>
                         </StackPanel>
                     </Grid>
 
@@ -263,156 +267,165 @@
 
                     <!-- Header -->
                     <Border Grid.Row="0" Background="{StaticResource PanelHeaderBg}" Padding="10,0">
-                        <TextBlock Text="INSPECTOR" FontSize="10" FontWeight="Bold" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Center"/>
+                        <TextBlock Text="INSPECTOR" FontSize="11" FontWeight="Bold" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Center"/>
                     </Border>
 
+                    <!-- Empty Inspector Placeholder -->
+                    <Grid x:Name="InspectorEmptyState" Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="20" Visibility="Collapsed">
+                        <StackPanel HorizontalAlignment="Center">
+                            <TextBlock Text="◈" FontSize="28" Foreground="#444444" HorizontalAlignment="Center" Margin="0,0,0,8"/>
+                            <TextBlock Text="No Source Selected" FontSize="13" FontWeight="Bold" Foreground="#AAAAAA" HorizontalAlignment="Center" Margin="0,0,0,4"/>
+                            <TextBlock Text="Click a layer in the Sources list to edit position, crop, green screen &amp; color grading." FontSize="11" Foreground="#666666" TextWrapping="Wrap" TextAlignment="Center" LineHeight="16"/>
+                        </StackPanel>
+                    </Grid>
+
                     <!-- Inspector Body -->
-                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="12">
+                    <ScrollViewer Grid.Row="1" x:Name="InspectorScrollViewer" VerticalScrollBarVisibility="Auto" Padding="12">
                         <StackPanel x:Name="InspectorPanel">
                             <!-- Selected Source Title -->
-                            <TextBlock x:Name="TxtInspectorSourceName" Text="No Source Selected" FontSize="13" FontWeight="Bold" Foreground="#FFFFFF" Margin="0,0,0,12"/>
+                            <TextBlock x:Name="TxtInspectorSourceName" Text="No Source Selected" FontSize="14" FontWeight="Bold" Foreground="#FFFFFF" Margin="0,0,0,12"/>
 
                             <!-- TRANSFORM SECTION -->
-                            <Border Background="{StaticResource CardBg}" BorderBrush="{StaticResource BorderDark}" BorderThickness="1" CornerRadius="4" Padding="10" Margin="0,0,0,12">
+                            <Border Background="{StaticResource CardBg}" BorderBrush="{StaticResource BorderDark}" BorderThickness="1" CornerRadius="4" Padding="12" Margin="0,0,0,12">
                                 <StackPanel>
-                                    <TextBlock Text="TRANSFORM &amp; POSITION" FontSize="9" FontWeight="Bold" Foreground="#888888" Margin="0,0,0,8"/>
+                                    <TextBlock Text="TRANSFORM &amp; POSITION" FontSize="10" FontWeight="Bold" Foreground="#AAAAAA" Margin="0,0,0,10"/>
                                     
-                                    <Grid Margin="0,0,0,6">
+                                    <Grid Margin="0,0,0,8">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*"/>
                                             <ColumnDefinition Width="*"/>
                                         </Grid.ColumnDefinitions>
                                         <StackPanel Grid.Column="0" Margin="0,0,4,0">
-                                            <TextBlock Text="POS X" FontSize="9" Foreground="{StaticResource TextSecondary}"/>
+                                            <TextBlock Text="POS X" FontSize="10" Foreground="{StaticResource TextSecondary}" Margin="0,0,0,3"/>
                                             <TextBox x:Name="TxtPropX" Text="0" TextChanged="OnTransformPropChanged"/>
                                         </StackPanel>
                                         <StackPanel Grid.Column="1" Margin="4,0,0,0">
-                                            <TextBlock Text="POS Y" FontSize="9" Foreground="{StaticResource TextSecondary}"/>
+                                            <TextBlock Text="POS Y" FontSize="10" Foreground="{StaticResource TextSecondary}" Margin="0,0,0,3"/>
                                             <TextBox x:Name="TxtPropY" Text="0" TextChanged="OnTransformPropChanged"/>
                                         </StackPanel>
                                     </Grid>
 
-                                    <Grid Margin="0,0,0,8">
+                                    <Grid Margin="0,0,0,10">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*"/>
                                             <ColumnDefinition Width="*"/>
                                         </Grid.ColumnDefinitions>
                                         <StackPanel Grid.Column="0" Margin="0,0,4,0">
-                                            <TextBlock Text="WIDTH" FontSize="9" Foreground="{StaticResource TextSecondary}"/>
+                                            <TextBlock Text="WIDTH" FontSize="10" Foreground="{StaticResource TextSecondary}" Margin="0,0,0,3"/>
                                             <TextBox x:Name="TxtPropWidth" Text="1920" TextChanged="OnTransformPropChanged"/>
                                         </StackPanel>
                                         <StackPanel Grid.Column="1" Margin="4,0,0,0">
-                                            <TextBlock Text="HEIGHT" FontSize="9" Foreground="{StaticResource TextSecondary}"/>
+                                            <TextBlock Text="HEIGHT" FontSize="10" Foreground="{StaticResource TextSecondary}" Margin="0,0,0,3"/>
                                             <TextBox x:Name="TxtPropHeight" Text="1080" TextChanged="OnTransformPropChanged"/>
                                         </StackPanel>
                                     </Grid>
 
-                                    <Grid Margin="0,0,0,8">
+                                    <Grid Margin="0,0,0,10">
                                         <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="60"/>
+                                            <ColumnDefinition Width="65"/>
                                             <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="40"/>
+                                            <ColumnDefinition Width="45"/>
                                         </Grid.ColumnDefinitions>
-                                        <TextBlock Text="Opacity" FontSize="10" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Center"/>
+                                        <TextBlock Text="Opacity" FontSize="11" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Center"/>
                                         <Slider Grid.Column="1" x:Name="SliderPropOpacity" Minimum="0" Maximum="1" Value="1" ValueChanged="OnOpacityPropChanged"/>
-                                        <TextBlock Grid.Column="2" x:Name="TxtPropOpacityVal" Text="100%" FontSize="10" TextAlignment="Right" VerticalAlignment="Center" Foreground="{StaticResource TextSecondary}"/>
+                                        <TextBlock Grid.Column="2" x:Name="TxtPropOpacityVal" Text="100%" FontSize="11" TextAlignment="Right" VerticalAlignment="Center" Foreground="{StaticResource TextSecondary}"/>
                                     </Grid>
 
                                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,4,0,0">
-                                        <Button Content="Fit Screen" Padding="8,3" FontSize="10" Margin="0,0,4,0" Click="OnFitSourceToScreenClicked"/>
-                                        <Button Content="Center" Padding="8,3" FontSize="10" Margin="0,0,4,0" Click="OnCenterSourceClicked"/>
-                                        <Button Content="Reset" Padding="8,3" FontSize="10" Click="OnResetTransformClicked"/>
+                                        <Button Content="Fit Screen" Padding="10,4" FontSize="11" Margin="0,0,4,0" ToolTip="Stretch source to fit full canvas dimensions" Click="OnFitSourceToScreenClicked"/>
+                                        <Button Content="Center" Padding="10,4" FontSize="11" Margin="0,0,4,0" ToolTip="Center source inside canvas" Click="OnCenterSourceClicked"/>
+                                        <Button Content="Reset" Padding="10,4" FontSize="11" ToolTip="Reset position and size to default" Click="OnResetTransformClicked"/>
                                     </StackPanel>
                                 </StackPanel>
                             </Border>
 
                             <!-- CHROMA KEY (GREEN SCREEN) SECTION -->
-                            <Border Background="{StaticResource CardBg}" BorderBrush="{StaticResource BorderDark}" BorderThickness="1" CornerRadius="4" Padding="10" Margin="0,0,0,12">
+                            <Border Background="{StaticResource CardBg}" BorderBrush="{StaticResource BorderDark}" BorderThickness="1" CornerRadius="4" Padding="12" Margin="0,0,0,12">
                                 <StackPanel>
-                                    <CheckBox x:Name="ChkPropChromaKey" Content="CHROMA KEY (GREEN SCREEN)" FontWeight="Bold" FontSize="9" Foreground="#FFFFFF" Margin="0,0,0,8" Checked="OnChromaKeyPropChanged" Unchecked="OnChromaKeyPropChanged"/>
+                                    <CheckBox x:Name="ChkPropChromaKey" Content="CHROMA KEY (GREEN SCREEN)" FontWeight="Bold" FontSize="10" Foreground="#FFFFFF" Margin="0,0,0,10" ToolTip="Remove green background from webcam" Checked="OnChromaKeyPropChanged" Unchecked="OnChromaKeyPropChanged"/>
                                     
-                                    <Grid Margin="0,0,0,6">
+                                    <Grid Margin="0,0,0,8">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="80"/>
                                             <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="35"/>
+                                            <ColumnDefinition Width="40"/>
                                         </Grid.ColumnDefinitions>
-                                        <TextBlock Text="Similarity" FontSize="10" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Center"/>
+                                        <TextBlock Text="Similarity" FontSize="11" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Center"/>
                                         <Slider Grid.Column="1" x:Name="SliderChromaSimilarity" Minimum="0" Maximum="1" Value="0.35" ValueChanged="OnChromaKeyPropChanged"/>
-                                        <TextBlock Grid.Column="2" x:Name="TxtChromaSimVal" Text="35%" FontSize="10" TextAlignment="Right" VerticalAlignment="Center" Foreground="{StaticResource TextSecondary}"/>
+                                        <TextBlock Grid.Column="2" x:Name="TxtChromaSimVal" Text="35%" FontSize="11" TextAlignment="Right" VerticalAlignment="Center" Foreground="{StaticResource TextSecondary}"/>
                                     </Grid>
 
-                                    <Grid Margin="0,0,0,6">
+                                    <Grid Margin="0,0,0,8">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="80"/>
                                             <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="35"/>
+                                            <ColumnDefinition Width="40"/>
                                         </Grid.ColumnDefinitions>
-                                        <TextBlock Text="Smoothness" FontSize="10" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Center"/>
+                                        <TextBlock Text="Smoothness" FontSize="11" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Center"/>
                                         <Slider Grid.Column="1" x:Name="SliderChromaSmoothness" Minimum="0" Maximum="1" Value="0.10" ValueChanged="OnChromaKeyPropChanged"/>
-                                        <TextBlock Grid.Column="2" x:Name="TxtChromaSmoothVal" Text="10%" FontSize="10" TextAlignment="Right" VerticalAlignment="Center" Foreground="{StaticResource TextSecondary}"/>
+                                        <TextBlock Grid.Column="2" x:Name="TxtChromaSmoothVal" Text="10%" FontSize="11" TextAlignment="Right" VerticalAlignment="Center" Foreground="{StaticResource TextSecondary}"/>
                                     </Grid>
 
                                     <Grid>
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="80"/>
                                             <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="35"/>
+                                            <ColumnDefinition Width="40"/>
                                         </Grid.ColumnDefinitions>
-                                        <TextBlock Text="Spill Reduce" FontSize="10" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Center"/>
+                                        <TextBlock Text="Spill Reduce" FontSize="11" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Center"/>
                                         <Slider Grid.Column="1" x:Name="SliderChromaSpill" Minimum="0" Maximum="1" Value="0.50" ValueChanged="OnChromaKeyPropChanged"/>
-                                        <TextBlock Grid.Column="2" x:Name="TxtChromaSpillVal" Text="50%" FontSize="10" TextAlignment="Right" VerticalAlignment="Center" Foreground="{StaticResource TextSecondary}"/>
+                                        <TextBlock Grid.Column="2" x:Name="TxtChromaSpillVal" Text="50%" FontSize="11" TextAlignment="Right" VerticalAlignment="Center" Foreground="{StaticResource TextSecondary}"/>
                                     </Grid>
                                 </StackPanel>
                             </Border>
 
                             <!-- VIDEO PROC AMP / COLOR ADJUSTMENTS -->
-                            <Border Background="{StaticResource CardBg}" BorderBrush="{StaticResource BorderDark}" BorderThickness="1" CornerRadius="4" Padding="10">
+                            <Border Background="{StaticResource CardBg}" BorderBrush="{StaticResource BorderDark}" BorderThickness="1" CornerRadius="4" Padding="12">
                                 <StackPanel>
-                                    <CheckBox x:Name="ChkPropColorAdjust" Content="COLOR ADJUST / PROC AMP" FontWeight="Bold" FontSize="9" Foreground="#FFFFFF" Margin="0,0,0,8" Checked="OnColorAdjustPropChanged" Unchecked="OnColorAdjustPropChanged"/>
+                                    <CheckBox x:Name="ChkPropColorAdjust" Content="COLOR ADJUST / PROC AMP" FontWeight="Bold" FontSize="10" Foreground="#FFFFFF" Margin="0,0,0,10" ToolTip="Fine-tune lighting, contrast, and color balance" Checked="OnColorAdjustPropChanged" Unchecked="OnColorAdjustPropChanged"/>
                                     
-                                    <Grid Margin="0,0,0,6">
+                                    <Grid Margin="0,0,0,8">
                                         <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="70"/>
+                                            <ColumnDefinition Width="75"/>
                                             <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="35"/>
+                                            <ColumnDefinition Width="40"/>
                                         </Grid.ColumnDefinitions>
-                                        <TextBlock Text="Brightness" FontSize="10" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Center"/>
+                                        <TextBlock Text="Brightness" FontSize="11" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Center"/>
                                         <Slider Grid.Column="1" x:Name="SliderPropBrightness" Minimum="-50" Maximum="50" Value="0" ValueChanged="OnColorAdjustPropChanged"/>
-                                        <TextBlock Grid.Column="2" x:Name="TxtPropBrightVal" Text="0" FontSize="10" TextAlignment="Right" VerticalAlignment="Center" Foreground="{StaticResource TextSecondary}"/>
+                                        <TextBlock Grid.Column="2" x:Name="TxtPropBrightVal" Text="0" FontSize="11" TextAlignment="Right" VerticalAlignment="Center" Foreground="{StaticResource TextSecondary}"/>
                                     </Grid>
 
-                                    <Grid Margin="0,0,0,6">
+                                    <Grid Margin="0,0,0,8">
                                         <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="70"/>
+                                            <ColumnDefinition Width="75"/>
                                             <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="35"/>
+                                            <ColumnDefinition Width="40"/>
                                         </Grid.ColumnDefinitions>
-                                        <TextBlock Text="Contrast" FontSize="10" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Center"/>
+                                        <TextBlock Text="Contrast" FontSize="11" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Center"/>
                                         <Slider Grid.Column="1" x:Name="SliderPropContrast" Minimum="0.5" Maximum="2.0" Value="1.0" ValueChanged="OnColorAdjustPropChanged"/>
-                                        <TextBlock Grid.Column="2" x:Name="TxtPropContrastVal" Text="1.0" FontSize="10" TextAlignment="Right" VerticalAlignment="Center" Foreground="{StaticResource TextSecondary}"/>
+                                        <TextBlock Grid.Column="2" x:Name="TxtPropContrastVal" Text="1.0" FontSize="11" TextAlignment="Right" VerticalAlignment="Center" Foreground="{StaticResource TextSecondary}"/>
                                     </Grid>
 
-                                    <Grid Margin="0,0,0,6">
+                                    <Grid Margin="0,0,0,8">
                                         <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="70"/>
+                                            <ColumnDefinition Width="75"/>
                                             <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="35"/>
+                                            <ColumnDefinition Width="40"/>
                                         </Grid.ColumnDefinitions>
-                                        <TextBlock Text="Saturation" FontSize="10" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Center"/>
+                                        <TextBlock Text="Saturation" FontSize="11" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Center"/>
                                         <Slider Grid.Column="1" x:Name="SliderPropSaturation" Minimum="0" Maximum="2.0" Value="1.0" ValueChanged="OnColorAdjustPropChanged"/>
-                                        <TextBlock Grid.Column="2" x:Name="TxtPropSatVal" Text="1.0" FontSize="10" TextAlignment="Right" VerticalAlignment="Center" Foreground="{StaticResource TextSecondary}"/>
+                                        <TextBlock Grid.Column="2" x:Name="TxtPropSatVal" Text="1.0" FontSize="11" TextAlignment="Right" VerticalAlignment="Center" Foreground="{StaticResource TextSecondary}"/>
                                     </Grid>
 
                                     <Grid>
                                         <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="70"/>
+                                            <ColumnDefinition Width="75"/>
                                             <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="35"/>
+                                            <ColumnDefinition Width="40"/>
                                         </Grid.ColumnDefinitions>
-                                        <TextBlock Text="Gamma" FontSize="10" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Center"/>
+                                        <TextBlock Text="Gamma" FontSize="11" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Center"/>
                                         <Slider Grid.Column="1" x:Name="SliderPropGamma" Minimum="0.5" Maximum="2.0" Value="1.0" ValueChanged="OnColorAdjustPropChanged"/>
-                                        <TextBlock Grid.Column="2" x:Name="TxtPropGammaVal" Text="1.0" FontSize="10" TextAlignment="Right" VerticalAlignment="Center" Foreground="{StaticResource TextSecondary}"/>
+                                        <TextBlock Grid.Column="2" x:Name="TxtPropGammaVal" Text="1.0" FontSize="11" TextAlignment="Right" VerticalAlignment="Center" Foreground="{StaticResource TextSecondary}"/>
                                     </Grid>
                                 </StackPanel>
                             </Border>
@@ -441,8 +454,16 @@
                         </Grid.RowDefinitions>
 
                         <Border Grid.Row="0" Background="{StaticResource PanelHeaderBg}" Padding="12,0">
-                            <TextBlock Text="SOURCES" FontSize="10" FontWeight="Bold" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Center"/>
+                            <TextBlock Text="SOURCES" FontSize="11" FontWeight="Bold" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Center"/>
                         </Border>
+
+                        <!-- Empty Sources Overlay -->
+                        <Grid x:Name="SourcesEmptyState" Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="16" Visibility="Collapsed">
+                            <StackPanel HorizontalAlignment="Center">
+                                <TextBlock Text="No sources added yet" FontSize="12" FontWeight="Bold" Foreground="#888888" HorizontalAlignment="Center" Margin="0,0,0,2"/>
+                                <TextBlock Text="Click '+ Add Source...' below to add a Screen, Camera, or Window." FontSize="10" Foreground="#555555" TextAlignment="Center"/>
+                            </StackPanel>
+                        </Grid>
 
                         <!-- Sources List -->
                         <ListBox Grid.Row="1" x:Name="SourcesListBox" Background="Transparent" BorderThickness="0" Margin="4" SelectionChanged="OnSourceSelectionChanged">
@@ -466,15 +487,15 @@
                                                         <TextBlock Text="•" Margin="0,0,6,0" VerticalAlignment="Center" Foreground="#666666"/>
                                                         <TextBlock Grid.Column="1" Text="{Binding Name}" FontWeight="SemiBold" FontSize="12" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
                                                         <!-- Visibility -->
-                                                        <Button Grid.Column="2" x:Name="BtnVis" Content="👁" Padding="4,1" Margin="0,0,4,0" Background="Transparent" BorderBrush="Transparent" Tag="{Binding}" Click="OnToggleVisibilityClicked"/>
+                                                        <Button Grid.Column="2" x:Name="BtnVis" Content="👁" Padding="4,1" Margin="0,0,4,0" Background="Transparent" BorderBrush="Transparent" ToolTip="Toggle Visibility" Tag="{Binding}" Click="OnToggleVisibilityClicked"/>
                                                         <!-- Lock -->
-                                                        <Button Grid.Column="3" x:Name="BtnLck" Content="🔓" Padding="4,1" Background="Transparent" BorderBrush="Transparent" Tag="{Binding}" Click="OnToggleLockClicked"/>
+                                                        <Button Grid.Column="3" x:Name="BtnLck" Content="🔓" Padding="4,1" Background="Transparent" BorderBrush="Transparent" ToolTip="Lock/Unlock Position" Tag="{Binding}" Click="OnToggleLockClicked"/>
                                                     </Grid>
                                                 </Border>
                                                 <ControlTemplate.Triggers>
                                                     <Trigger Property="IsSelected" Value="True">
                                                         <Setter TargetName="SrcBorder" Property="Background" Value="#222222"/>
-                                                        <Setter TargetName="SrcBorder" Property="BorderBrush" Value="#444444"/>
+                                                        <Setter TargetName="SrcBorder" Property="BorderBrush" Value="#555555"/>
                                                         <Setter Property="Foreground" Value="#FFFFFF"/>
                                                     </Trigger>
                                                 </ControlTemplate.Triggers>
@@ -488,10 +509,10 @@
                         <!-- Sources Toolbar -->
                         <Border Grid.Row="2" Background="{StaticResource PanelHeaderBg}" Padding="8,0">
                             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                <Button Content="+ Add Source..." Padding="10,4" Margin="0,0,4,0" Background="#FFFFFF" Foreground="#000000" BorderBrush="#FFFFFF" FontWeight="Bold" Click="OnAddSourceClicked"/>
-                                <Button Content="- Del" Padding="8,4" Margin="0,0,4,0" Click="OnDeleteSourceClicked"/>
-                                <Button Content="▲ Up" Padding="8,4" Margin="0,0,4,0" Click="OnMoveSourceUpClicked"/>
-                                <Button Content="▼ Down" Padding="8,4" Click="OnMoveSourceDownClicked"/>
+                                <Button Content="+ Add Source..." Padding="12,5" Margin="0,0,4,0" Background="#FFFFFF" Foreground="#000000" BorderBrush="#FFFFFF" FontWeight="Bold" ToolTip="Add Screen, Window, Camera, Image, or Text source" Click="OnAddSourceClicked"/>
+                                <Button Content="- Del" Padding="8,5" Margin="0,0,4,0" ToolTip="Delete selected source (Del key)" Click="OnDeleteSourceClicked"/>
+                                <Button Content="▲ Up" Padding="8,5" Margin="0,0,4,0" ToolTip="Move source layer up in Z-stack" Click="OnMoveSourceUpClicked"/>
+                                <Button Content="▼ Down" Padding="8,5" ToolTip="Move source layer down in Z-stack" Click="OnMoveSourceDownClicked"/>
                             </StackPanel>
                         </Border>
                     </Grid>
@@ -507,8 +528,8 @@
 
                         <Border Grid.Row="0" Background="{StaticResource PanelHeaderBg}" Padding="12,0">
                             <Grid VerticalAlignment="Center">
-                                <TextBlock Text="AUDIO MIXER" FontSize="10" FontWeight="Bold" Foreground="{StaticResource TextSecondary}"/>
-                                <Button Content="DSP Effects Rack" HorizontalAlignment="Right" Padding="8,3" FontSize="10" Click="OnOpenAudioRackClicked"/>
+                                <TextBlock Text="AUDIO MIXER" FontSize="11" FontWeight="Bold" Foreground="{StaticResource TextSecondary}"/>
+                                <Button Content="DSP Effects Rack" HorizontalAlignment="Right" Padding="10,4" FontSize="11" ToolTip="Configure Voice Presets, Noise Gate, EQ, Compressor &amp; Limiter" Click="OnOpenAudioRackClicked"/>
                             </Grid>
                         </Border>
 
@@ -548,9 +569,9 @@
                                             <ColumnDefinition Width="*"/>
                                             <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
-                                        <Button x:Name="BtnMuteMic" Content="Mute" Padding="6,2" Margin="0,0,8,0" Click="OnMuteMicClicked"/>
-                                        <Slider Grid.Column="1" x:Name="SliderMicVolume" Minimum="0" Maximum="1.5" Value="1.0" ValueChanged="OnMicVolumeChanged"/>
-                                        <TextBlock Grid.Column="2" x:Name="TxtMicVolVal" Text="100%" FontSize="10" Foreground="{StaticResource TextSecondary}" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                                        <Button x:Name="BtnMuteMic" Content="Mute" Padding="8,3" Margin="0,0,8,0" ToolTip="Mute/Unmute Microphone" Click="OnMuteMicClicked"/>
+                                        <Slider Grid.Column="1" x:Name="SliderMicVolume" Minimum="0" Maximum="1.5" Value="1.0" ToolTip="Microphone Volume Gain" ValueChanged="OnMicVolumeChanged"/>
+                                        <TextBlock Grid.Column="2" x:Name="TxtMicVolVal" Text="100% (0.0 dB)" FontSize="10" Foreground="{StaticResource TextSecondary}" Margin="8,0,0,0" VerticalAlignment="Center"/>
                                     </Grid>
                                 </Grid>
                             </Border>
@@ -565,7 +586,7 @@
                                     </Grid.RowDefinitions>
 
                                     <Grid Grid.Row="0">
-                                        <TextBlock Text="Desktop / Media Audio" FontSize="12" FontWeight="SemiBold" Foreground="#FFFFFF"/>
+                                        <TextBlock Text="Desktop / Game Audio" FontSize="12" FontWeight="SemiBold" Foreground="#FFFFFF"/>
                                         <TextBlock x:Name="TxtDesktopLevelDb" Text="-60.0 dB" HorizontalAlignment="Right" FontSize="11" Foreground="#FFFFFF" FontWeight="Bold"/>
                                     </Grid>
 
@@ -577,9 +598,9 @@
                                             <ColumnDefinition Width="*"/>
                                             <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
-                                        <Button x:Name="BtnMuteDesktop" Content="Mute" Padding="6,2" Margin="0,0,8,0" Click="OnMuteDesktopClicked"/>
-                                        <Slider Grid.Column="1" x:Name="SliderDesktopVolume" Minimum="0" Maximum="1.0" Value="0.8" ValueChanged="OnDesktopVolumeChanged"/>
-                                        <TextBlock Grid.Column="2" x:Name="TxtDesktopVolVal" Text="80%" FontSize="10" Foreground="{StaticResource TextSecondary}" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                                        <Button x:Name="BtnMuteDesktop" Content="Mute" Padding="8,3" Margin="0,0,8,0" ToolTip="Mute/Unmute Desktop Audio" Click="OnMuteDesktopClicked"/>
+                                        <Slider Grid.Column="1" x:Name="SliderDesktopVolume" Minimum="0" Maximum="1.0" Value="0.8" ToolTip="Desktop / Game Audio Volume" ValueChanged="OnDesktopVolumeChanged"/>
+                                        <TextBlock Grid.Column="2" x:Name="TxtDesktopVolVal" Text="80% (-1.9 dB)" FontSize="10" Foreground="{StaticResource TextSecondary}" Margin="8,0,0,0" VerticalAlignment="Center"/>
                                     </Grid>
                                 </Grid>
                             </Border>
@@ -596,7 +617,7 @@
                         </Grid.RowDefinitions>
 
                         <Border Grid.Row="0" Background="{StaticResource PanelHeaderBg}" Padding="12,0">
-                            <TextBlock Text="STATUS" FontSize="10" FontWeight="Bold" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Center"/>
+                            <TextBlock Text="STATUS" FontSize="11" FontWeight="Bold" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Center"/>
                         </Border>
 
                         <StackPanel Grid.Row="1" Margin="12,10">
@@ -604,8 +625,8 @@
                             <Border Background="{StaticResource CardBg}" BorderBrush="{StaticResource BorderDark}" BorderThickness="1" CornerRadius="4" Padding="10" Margin="0,0,0,8">
                                 <StackPanel>
                                     <Grid>
-                                        <TextBlock Text="RECORDING" FontSize="9" FontWeight="Bold" Foreground="{StaticResource TextSecondary}"/>
-                                        <TextBlock x:Name="TxtRecStatus" Text="STANDBY" HorizontalAlignment="Right" FontSize="9" FontWeight="Bold" Foreground="#888888"/>
+                                        <TextBlock Text="RECORDING" FontSize="10" FontWeight="Bold" Foreground="{StaticResource TextSecondary}"/>
+                                        <TextBlock x:Name="TxtRecStatus" Text="STANDBY" HorizontalAlignment="Right" FontSize="10" FontWeight="Bold" Foreground="#888888"/>
                                     </Grid>
                                     <TextBlock x:Name="TxtRecDuration" Text="00:00:00" FontSize="18" FontWeight="Bold" Foreground="#FFFFFF" Margin="0,3,0,1"/>
                                     <TextBlock x:Name="TxtRecSize" Text="Size: 0.0 MB • MP4" FontSize="10" Foreground="{StaticResource TextSecondary}"/>
@@ -616,8 +637,8 @@
                             <Border Background="{StaticResource CardBg}" BorderBrush="{StaticResource BorderDark}" BorderThickness="1" CornerRadius="4" Padding="10">
                                 <StackPanel>
                                     <Grid>
-                                        <TextBlock Text="LIVE STREAM" FontSize="9" FontWeight="Bold" Foreground="{StaticResource TextSecondary}"/>
-                                        <TextBlock x:Name="TxtStreamStatus" Text="OFFLINE" HorizontalAlignment="Right" FontSize="9" FontWeight="Bold" Foreground="#888888"/>
+                                        <TextBlock Text="LIVE STREAM" FontSize="10" FontWeight="Bold" Foreground="{StaticResource TextSecondary}"/>
+                                        <TextBlock x:Name="TxtStreamStatus" Text="OFFLINE" HorizontalAlignment="Right" FontSize="10" FontWeight="Bold" Foreground="#888888"/>
                                     </Grid>
                                     <TextBlock x:Name="TxtStreamUptime" Text="00:00:00" FontSize="18" FontWeight="Bold" Foreground="#FFFFFF" Margin="0,3,0,1"/>
                                     <TextBlock x:Name="TxtStreamBitrate" Text="Bitrate: 0 kbps • 0% drops" FontSize="10" Foreground="{StaticResource TextSecondary}"/>

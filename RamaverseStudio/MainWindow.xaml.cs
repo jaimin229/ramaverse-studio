@@ -227,7 +227,10 @@ namespace RamaverseStudio
         private void OnWindowKeyDown(object sender, KeyEventArgs e)
         {
             // Do not intercept hotkeys if user is currently typing in a text box
-            if (e.OriginalSource is TextBox) return;
+            if (e.OriginalSource is System.Windows.Controls.Primitives.TextBoxBase ||
+                e.OriginalSource is PasswordBox ||
+                e.OriginalSource is Slider ||
+                e.OriginalSource is ComboBox) return;
 
             bool isCtrl = (Keyboard.Modifiers & ModifierKeys.Control) != 0;
             bool isShift = (Keyboard.Modifiers & ModifierKeys.Shift) != 0;
@@ -361,6 +364,7 @@ namespace RamaverseStudio
             _activeScene = scene;
             _compositor.CurrentScene = scene;
             SourcesListBox.ItemsSource = scene.Sources;
+            SourcesEmptyState.Visibility = scene.Sources.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
 
             TxtActiveSceneName.Text = $"Scene: {scene.Name}";
 
@@ -392,11 +396,15 @@ namespace RamaverseStudio
                 TxtInspectorSourceName.Text = source.Name;
                 UpdateInspectorUI();
                 InspectorPanel.IsEnabled = true;
+                InspectorEmptyState.Visibility = Visibility.Collapsed;
+                InspectorScrollViewer.Visibility = Visibility.Visible;
             }
             else
             {
                 TxtInspectorSourceName.Text = "No Source Selected";
                 InspectorPanel.IsEnabled = false;
+                InspectorEmptyState.Visibility = Visibility.Visible;
+                InspectorScrollViewer.Visibility = Visibility.Collapsed;
             }
         }
 
@@ -528,8 +536,19 @@ namespace RamaverseStudio
         #endregion
 
         #region Format Switchers
+        private bool CheckResolutionChangeAllowed()
+        {
+            if (_recordingEngine.IsRecording || _streamingEngine.IsStreaming)
+            {
+                MessageBox.Show("Canvas resolution cannot be changed while recording or streaming is actively running.", "Resolution Locked", MessageBoxButton.OK, MessageBoxImage.Information);
+                return false;
+            }
+            return true;
+        }
+
         private void OnFormat16x9Clicked(object sender, RoutedEventArgs e)
         {
+            if (!CheckResolutionChangeAllowed()) return;
             _profile.CanvasFormat = CanvasFormat.Horizontal16x9;
             _profile.CanvasWidth = 1920;
             _profile.CanvasHeight = 1080;
@@ -538,6 +557,7 @@ namespace RamaverseStudio
 
         private void OnFormat9x16Clicked(object sender, RoutedEventArgs e)
         {
+            if (!CheckResolutionChangeAllowed()) return;
             _profile.CanvasFormat = CanvasFormat.Vertical9x16;
             _profile.CanvasWidth = 1080;
             _profile.CanvasHeight = 1920;
@@ -546,6 +566,7 @@ namespace RamaverseStudio
 
         private void OnFormatSquareClicked(object sender, RoutedEventArgs e)
         {
+            if (!CheckResolutionChangeAllowed()) return;
             _profile.CanvasFormat = CanvasFormat.Square1x1;
             _profile.CanvasWidth = 1080;
             _profile.CanvasHeight = 1080;
@@ -554,6 +575,7 @@ namespace RamaverseStudio
 
         private void OnFormatDualClicked(object sender, RoutedEventArgs e)
         {
+            if (!CheckResolutionChangeAllowed()) return;
             // Dual Canvas Landscape + Vertical
             _profile.CanvasFormat = CanvasFormat.Custom;
             _profile.CanvasWidth = 3000;
@@ -662,6 +684,26 @@ namespace RamaverseStudio
         {
             if (!_streamingEngine.IsStreaming)
             {
+                if (string.IsNullOrWhiteSpace(_profile.StreamKey))
+                {
+                    var res = MessageBox.Show(
+                        "You are almost ready to go live!\n\nPlease enter your YouTube, Twitch, or Kick Stream Key in Settings.\n\nWould you like to open Settings now to paste your stream key?",
+                        "Stream Key Setup — Ramaverse Studio",
+                        MessageBoxButton.YesNo,
+                        MessageBoxImage.Information);
+
+                    if (res == MessageBoxResult.Yes)
+                    {
+                        var dlg = new SettingsWindow(_profile) { Owner = this };
+                        if (dlg.ShowDialog() == true)
+                        {
+                            _profile = dlg.Profile;
+                            ApplyCanvasResolutionChange();
+                        }
+                    }
+                    return;
+                }
+
                 bool success = await _streamingEngine.StartStreamingAsync(_profile);
                 if (success)
                 {
@@ -977,7 +1019,8 @@ namespace RamaverseStudio
             if (_audioEngine == null) return;
             double linear = SliderMicVolume.Value;
             _audioEngine.FilterSettings.InputGainDb = linear > 1e-4 ? 20.0 * Math.Log10(linear) : -60.0;
-            if (TxtMicVolVal != null) TxtMicVolVal.Text = $"{(linear * 100):F0}%";
+            double db = linear > 1e-4 ? 20.0 * Math.Log10(linear) : -60.0;
+            if (TxtMicVolVal != null) TxtMicVolVal.Text = $"{linear * 100:F0}% ({(db >= 0 ? "+" : "")}{db:F1} dB)";
         }
 
         private void OnMuteDesktopClicked(object sender, RoutedEventArgs e)
@@ -999,7 +1042,9 @@ namespace RamaverseStudio
         {
             if (_audioEngine == null) return;
             _audioEngine.DesktopVolume = SliderDesktopVolume.Value;
-            if (TxtDesktopVolVal != null) TxtDesktopVolVal.Text = $"{(SliderDesktopVolume.Value * 100):F0}%";
+            double linear = SliderDesktopVolume.Value;
+            double db = linear > 1e-4 ? 20.0 * Math.Log10(linear) : -60.0;
+            if (TxtDesktopVolVal != null) TxtDesktopVolVal.Text = $"{linear * 100:F0}% ({(db >= 0 ? "+" : "")}{db:F1} dB)";
         }
         #endregion
 

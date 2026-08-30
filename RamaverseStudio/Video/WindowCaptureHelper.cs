@@ -102,16 +102,19 @@ namespace RamaverseStudio.Video
             return list;
         }
 
+        [DllImport("user32.dll")]
+        private static extern bool IsIconic(IntPtr hWnd);
+
         public static Bitmap? CaptureWindow(IntPtr hWnd)
         {
-            if (hWnd == IntPtr.Zero || !IsWindowVisible(hWnd))
+            if (hWnd == IntPtr.Zero || !IsWindowVisible(hWnd) || IsIconic(hWnd))
                 return null;
 
             GetWindowRect(hWnd, out RECT rc);
             int width = rc.Right - rc.Left;
             int height = rc.Bottom - rc.Top;
 
-            if (width <= 0 || height <= 0)
+            if (width <= 0 || height <= 0 || rc.Left <= -30000 || rc.Top <= -30000)
                 return null;
 
             Bitmap bmp = new Bitmap(width, height, System.Drawing.Imaging.PixelFormat.Format32bppArgb);

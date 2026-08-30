@@ -7,8 +7,8 @@ using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.Drawing.Text;
 using System.IO;
+using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
@@ -24,7 +24,6 @@ namespace RamaverseStudio.Video
 
         private Thread? _renderThread;
         private bool _isRunning = false;
-        private readonly CancellationTokenSource _cts = new CancellationTokenSource();
 
         // Active Scene reference
         public Scene? CurrentScene { get; set; }
@@ -33,8 +32,15 @@ namespace RamaverseStudio.Video
         public CameraCaptureHelper CameraHelper { get; } = new CameraCaptureHelper();
         public PhoneCameraReceiver PhoneCamera { get; } = new PhoneCameraReceiver();
 
-        // Image file cache
+        // Image file & Text caches
         private readonly ConcurrentDictionary<string, Bitmap> _imageCache = new ConcurrentDictionary<string, Bitmap>();
+        private readonly Dictionary<string, Bitmap> _textCache = new Dictionary<string, Bitmap>();
+        private readonly Dictionary<string, Bitmap> _colorCache = new Dictionary<string, Bitmap>();
+
+        // Reusable persistent frame rendering buffers (Eliminates ~480MB/s GC pressure)
+        private Bitmap? _canvasBitmap;
+        private Graphics? _canvasGraphics;
+        private byte[]? _pixelBytesBuffer;
 
         // Live preview WriteableBitmap (UI accessible)
         public WriteableBitmap PreviewBitmap { get; private set; }
@@ -61,7 +67,24 @@ namespace RamaverseStudio.Video
             _canvasHeight = height;
             _targetFps = fps;
 
+            InitReusableCanvas(width, height);
             PreviewBitmap = new WriteableBitmap(_canvasWidth, _canvasHeight, 96, 96, System.Windows.Media.PixelFormats.Bgra32, null);
+        }
+
+        private void InitReusableCanvas(int w, int h)
+        {
+            _canvasGraphics?.Dispose();
+            _canvasBitmap?.Dispose();
+
+            _canvasBitmap = new Bitmap(w, h, PixelFormat.Format32bppArgb);
+            _canvasGraphics = Graphics.FromImage(_canvasBitmap);
+            _canvasGraphics.CompositingMode = CompositingMode.SourceOver;
+            _canvasGraphics.CompositingQuality = CompositingQuality.HighSpeed;
+            _canvasGraphics.InterpolationMode = InterpolationMode.Bilinear;
+            _canvasGraphics.SmoothingMode = SmoothingMode.HighSpeed;
+            _canvasGraphics.TextRenderingHint = TextRenderingHint.AntiAliasGridFit;
+
+            _pixelBytesBuffer = new byte[w * h * 4];
         }
 
         public void SetCanvasDimensions(int width, int height, int fps = 60)
@@ -71,6 +94,8 @@ namespace RamaverseStudio.Video
                 _canvasWidth = Math.Max(320, width);
                 _canvasHeight = Math.Max(240, height);
                 _targetFps = Math.Clamp(fps, 10, 120);
+
+                InitReusableCanvas(_canvasWidth, _canvasHeight);
 
                 _uiDispatcher.Invoke(() =>
                 {
@@ -85,7 +110,7 @@ namespace RamaverseStudio.Video
         {
             lock (_renderLock)
             {
-                var bmp = new Bitmap(_canvasWidth, _canvasHeight, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+                var bmp = new Bitmap(_canvasWidth, _canvasHeight, PixelFormat.Format32bppArgb);
                 using (var g = Graphics.FromImage(bmp))
                 {
                     g.Clear(System.Drawing.Color.Black);
@@ -130,7 +155,6 @@ namespace RamaverseStudio.Video
         private void RenderLoop()
         {
             var stopwatch = Stopwatch.StartNew();
-            long lastFrameTime = stopwatch.ElapsedMilliseconds;
             int frameCounter = 0;
             long fpsTimer = stopwatch.ElapsedMilliseconds;
 
@@ -169,42 +193,39 @@ namespace RamaverseStudio.Video
         {
             lock (_renderLock)
             {
+                if (_canvasBitmap == null || _canvasGraphics == null || _pixelBytesBuffer == null)
+                    return;
+
                 int w = _canvasWidth;
                 int h = _canvasHeight;
 
-                using Bitmap canvas = new Bitmap(w, h, PixelFormat.Format32bppArgb);
-                using (Graphics g = Graphics.FromImage(canvas))
+                // Background fill
+                _canvasGraphics.Clear(System.Drawing.Color.FromArgb(15, 17, 23));
+
+                var scene = CurrentScene;
+                if (scene != null)
                 {
-                    g.CompositingMode = CompositingMode.SourceOver;
-                    g.CompositingQuality = CompositingQuality.HighSpeed;
-                    g.InterpolationMode = InterpolationMode.Bilinear;
-                    g.SmoothingMode = SmoothingMode.HighSpeed;
-                    g.TextRenderingHint = TextRenderingHint.AntiAliasGridFit;
-
-                    // Background fill
-                    g.Clear(System.Drawing.Color.FromArgb(15, 17, 23));
-
-                    var scene = CurrentScene;
-                    if (scene != null)
+                    var sources = scene.Sources;
+                    for (int i = 0; i < sources.Count; i++)
                     {
-                        var sources = scene.Sources;
-                        for (int i = 0; i < sources.Count; i++)
-                        {
-                            var src = sources[i];
-                            if (!src.IsVisible) continue;
+                        var src = sources[i];
+                        if (!src.IsVisible) continue;
 
-                            RenderSource(g, src, w, h);
-                        }
+                        RenderSource(_canvasGraphics, src, w, h);
                     }
                 }
 
                 // Copy to WriteableBitmap and dispatch to output listeners
-                BitmapData bmpData = canvas.LockBits(new Rectangle(0, 0, w, h), ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb);
+                BitmapData bmpData = _canvasBitmap.LockBits(new Rectangle(0, 0, w, h), ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb);
                 try
                 {
                     int byteCount = bmpData.Stride * h;
-                    byte[] pixelBytes = new byte[byteCount];
-                    System.Runtime.InteropServices.Marshal.Copy(bmpData.Scan0, pixelBytes, 0, byteCount);
+                    if (_pixelBytesBuffer.Length < byteCount)
+                    {
+                        _pixelBytesBuffer = new byte[byteCount];
+                    }
+
+                    System.Runtime.InteropServices.Marshal.Copy(bmpData.Scan0, _pixelBytesBuffer, 0, byteCount);
 
                     // Update UI WriteableBitmap
                     _uiDispatcher.BeginInvoke(new Action(() =>
@@ -213,23 +234,23 @@ namespace RamaverseStudio.Video
                         {
                             if (PreviewBitmap.PixelWidth == w && PreviewBitmap.PixelHeight == h)
                             {
-                                PreviewBitmap.WritePixels(new Int32Rect(0, 0, w, h), pixelBytes, bmpData.Stride, 0);
+                                PreviewBitmap.WritePixels(new Int32Rect(0, 0, w, h), _pixelBytesBuffer, bmpData.Stride, 0);
                             }
                         }
                         catch { }
                     }), DispatcherPriority.Render);
 
                     // Notify recording and streaming engines
-                    FrameComposited?.Invoke(pixelBytes, w, h, bmpData.Stride);
+                    FrameComposited?.Invoke(_pixelBytesBuffer, w, h, bmpData.Stride);
                 }
                 finally
                 {
-                    canvas.UnlockBits(bmpData);
+                    _canvasBitmap.UnlockBits(bmpData);
                 }
             }
         }
 
-        private void RenderSource(Graphics g, SourceItem src, int canvasW, int canvasH)
+        private void RenderSource(Graphics g, SourceItem src, int canvasWidth, int canvasHeight)
         {
             Bitmap? layerBmp = null;
             bool shouldDisposeBmp = false;
@@ -299,19 +320,13 @@ namespace RamaverseStudio.Video
                         break;
 
                     case SourceType.TextOverlay:
-                        layerBmp = RenderTextBitmap(src);
-                        shouldDisposeBmp = true;
+                        layerBmp = GetCachedTextBitmap(src);
+                        shouldDisposeBmp = false;
                         break;
 
                     case SourceType.ColorSource:
-                        layerBmp = new Bitmap((int)Math.Max(10, src.Width), (int)Math.Max(10, src.Height), PixelFormat.Format32bppArgb);
-                        using (Graphics cg = Graphics.FromImage(layerBmp))
-                        {
-                            var col = System.Drawing.Color.FromArgb(src.SolidColor.A, src.SolidColor.R, src.SolidColor.G, src.SolidColor.B);
-                            using var brush = new SolidBrush(col);
-                            cg.FillRectangle(brush, 0, 0, layerBmp.Width, layerBmp.Height);
-                        }
-                        shouldDisposeBmp = true;
+                        layerBmp = GetCachedColorBitmap(src);
+                        shouldDisposeBmp = false;
                         break;
                 }
 
@@ -398,8 +413,30 @@ namespace RamaverseStudio.Video
             }
         }
 
-        private Bitmap RenderTextBitmap(SourceItem src)
+        private Bitmap GetCachedColorBitmap(SourceItem src)
         {
+            string key = $"{src.SolidColor}_{src.Width}_{src.Height}";
+            if (_colorCache.TryGetValue(key, out var cached)) return cached;
+
+            int w = (int)Math.Max(10, src.Width);
+            int h = (int)Math.Max(10, src.Height);
+            var bmp = new Bitmap(w, h, PixelFormat.Format32bppArgb);
+            using (Graphics cg = Graphics.FromImage(bmp))
+            {
+                var col = System.Drawing.Color.FromArgb(src.SolidColor.A, src.SolidColor.R, src.SolidColor.G, src.SolidColor.B);
+                using var brush = new SolidBrush(col);
+                cg.FillRectangle(brush, 0, 0, w, h);
+            }
+
+            _colorCache[key] = bmp;
+            return bmp;
+        }
+
+        private Bitmap GetCachedTextBitmap(SourceItem src)
+        {
+            string key = $"{src.TextContent}_{src.FontFamily}_{src.FontSize}_{src.IsBold}_{src.IsItalic}_{src.TextColor}_{src.TextBackgroundColor}_{src.TextOutlineColor}_{src.TextOutlineThickness}_{src.Width}_{src.Height}";
+            if (_textCache.TryGetValue(key, out var cached)) return cached;
+
             int w = (int)Math.Max(50, src.Width);
             int h = (int)Math.Max(30, src.Height);
             Bitmap bmp = new Bitmap(w, h, PixelFormat.Format32bppArgb);
@@ -447,6 +484,7 @@ namespace RamaverseStudio.Video
                 g.FillPath(textBrush, path);
             }
 
+            _textCache[key] = bmp;
             return bmp;
         }
 
@@ -454,11 +492,15 @@ namespace RamaverseStudio.Video
         {
             Stop();
             CameraHelper.Dispose();
-            foreach (var img in _imageCache.Values)
-            {
-                img.Dispose();
-            }
+            foreach (var img in _imageCache.Values) img.Dispose();
             _imageCache.Clear();
+            foreach (var txt in _textCache.Values) txt.Dispose();
+            _textCache.Clear();
+            foreach (var col in _colorCache.Values) col.Dispose();
+            _colorCache.Clear();
+
+            _canvasGraphics?.Dispose();
+            _canvasBitmap?.Dispose();
         }
     }
 }

@@ -112,6 +112,7 @@ namespace RamaverseStudio.Audio
         public float Process(float sample)
         {
             float result = _b0 * sample + _b1 * _x1 + _b2 * _x2 - _a1 * _y1 - _a2 * _y2;
+            if (Math.Abs(result) < 1e-25f) result = 0.0f;
             _x2 = _x1;
             _x1 = sample;
             _y2 = _y1;
