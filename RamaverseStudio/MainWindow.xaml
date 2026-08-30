@@ -130,6 +130,9 @@
                     <!-- Snapshot button -->
                     <Button x:Name="BtnSnapshot" Content="Snapshot" Margin="0,0,8,0" Padding="10,6" ToolTip="Take Instant Studio Screenshot (Ctrl+S)" Click="OnSnapshotClicked"/>
 
+                    <!-- Instant Replay Clip button -->
+                    <Button x:Name="BtnSaveReplay" Content="⚡ CLIP (30s)" Margin="0,0,8,0" Padding="10,6" Background="#1C1C1C" BorderBrush="#3A3A3A" Foreground="#FFFFFF" FontWeight="Bold" ToolTip="Save Instant 30-Second Replay / Short Clip (Ctrl+Shift+F10)" Click="OnSaveReplayClicked"/>
+
                     <!-- Pause Rec Button -->
                     <Button x:Name="BtnPauseRec" Content="Pause" Margin="0,0,8,0" Padding="10,6" Visibility="Collapsed" ToolTip="Pause Recording (Ctrl+P)" Click="OnPauseRecClicked"/>
 
@@ -265,22 +268,27 @@
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
 
-                    <!-- Header -->
-                    <Border Grid.Row="0" Background="{StaticResource PanelHeaderBg}" Padding="10,0">
-                        <TextBlock Text="INSPECTOR" FontSize="11" FontWeight="Bold" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Center"/>
+                    <!-- Header Tabs -->
+                    <Border Grid.Row="0" Background="{StaticResource PanelHeaderBg}" Padding="6,0">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <Button x:Name="BtnTabInspector" Content="PROPERTIES" Padding="8,4" Margin="0,0,4,0" Background="#242424" BorderBrush="#444444" Foreground="#FFFFFF" FontWeight="Bold" FontSize="10" Click="OnTabInspectorClicked"/>
+                            <Button x:Name="BtnTabChat" Content="💬 CHAT &amp; ALERTS" Padding="8,4" Background="Transparent" BorderBrush="Transparent" Foreground="#888888" FontSize="10" Click="OnTabChatClicked"/>
+                        </StackPanel>
                     </Border>
 
-                    <!-- Empty Inspector Placeholder -->
-                    <Grid x:Name="InspectorEmptyState" Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="20" Visibility="Collapsed">
-                        <StackPanel HorizontalAlignment="Center">
-                            <TextBlock Text="◈" FontSize="28" Foreground="#444444" HorizontalAlignment="Center" Margin="0,0,0,8"/>
-                            <TextBlock Text="No Source Selected" FontSize="13" FontWeight="Bold" Foreground="#AAAAAA" HorizontalAlignment="Center" Margin="0,0,0,4"/>
-                            <TextBlock Text="Click a layer in the Sources list to edit position, crop, green screen &amp; color grading." FontSize="11" Foreground="#666666" TextWrapping="Wrap" TextAlignment="Center" LineHeight="16"/>
-                        </StackPanel>
-                    </Grid>
+                    <!-- Tab 1: Inspector Container -->
+                    <Grid x:Name="InspectorContainerGrid" Grid.Row="1">
+                        <!-- Empty Inspector Placeholder -->
+                        <Grid x:Name="InspectorEmptyState" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="20" Visibility="Collapsed">
+                            <StackPanel HorizontalAlignment="Center">
+                                <TextBlock Text="◈" FontSize="28" Foreground="#444444" HorizontalAlignment="Center" Margin="0,0,0,8"/>
+                                <TextBlock Text="No Source Selected" FontSize="13" FontWeight="Bold" Foreground="#AAAAAA" HorizontalAlignment="Center" Margin="0,0,0,4"/>
+                                <TextBlock Text="Click a layer in the Sources list to edit position, crop, green screen &amp; color grading." FontSize="11" Foreground="#666666" TextWrapping="Wrap" TextAlignment="Center" LineHeight="16"/>
+                            </StackPanel>
+                        </Grid>
 
-                    <!-- Inspector Body -->
-                    <ScrollViewer Grid.Row="1" x:Name="InspectorScrollViewer" VerticalScrollBarVisibility="Auto" Padding="12">
+                        <!-- Inspector Body -->
+                        <ScrollViewer x:Name="InspectorScrollViewer" VerticalScrollBarVisibility="Auto" Padding="12">
                         <StackPanel x:Name="InspectorPanel">
                             <!-- Selected Source Title -->
                             <TextBlock x:Name="TxtInspectorSourceName" Text="No Source Selected" FontSize="14" FontWeight="Bold" Foreground="#FFFFFF" Margin="0,0,0,12"/>
@@ -431,6 +439,12 @@
                             </Border>
                         </StackPanel>
                     </ScrollViewer>
+                    </Grid>
+
+                    <!-- Tab 2: Live Chat & Alerts Dock -->
+                    <Grid x:Name="ChatContainerGrid" Grid.Row="1" Visibility="Collapsed">
+                        <ui:LiveChatDockControl x:Name="LiveChatDock"/>
+                    </Grid>
                 </Grid>
             </Border>
         </Grid>
@@ -528,7 +542,15 @@
 
                         <Border Grid.Row="0" Background="{StaticResource PanelHeaderBg}" Padding="12,0">
                             <Grid VerticalAlignment="Center">
-                                <TextBlock Text="AUDIO MIXER" FontSize="11" FontWeight="Bold" Foreground="{StaticResource TextSecondary}"/>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="AUDIO MIXER" FontSize="11" FontWeight="Bold" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                    <!-- Quick Streamer Soundboard Triggers -->
+                                    <Button Content="📢 Horn" Padding="6,2" FontSize="10" Margin="0,0,3,0" ToolTip="Play Airhorn SFX into Stream" Click="OnSfxAirhornClicked"/>
+                                    <Button Content="🏆 Win" Padding="6,2" FontSize="10" Margin="0,0,3,0" ToolTip="Play Victory Chime SFX into Stream" Click="OnSfxVictoryClicked"/>
+                                    <Button Content="⚡ Level" Padding="6,2" FontSize="10" Margin="0,0,3,0" ToolTip="Play Level Up SFX into Stream" Click="OnSfxLevelUpClicked"/>
+                                    <Button Content="💥 Laser" Padding="6,2" FontSize="10" Margin="0,0,3,0" ToolTip="Play Laser Beam SFX into Stream" Click="OnSfxLaserClicked"/>
+                                    <Button Content="❌ Buzz" Padding="6,2" FontSize="10" Margin="0,0,3,0" ToolTip="Play Buzzer SFX into Stream" Click="OnSfxBuzzerClicked"/>
+                                </StackPanel>
                                 <Button Content="DSP Effects Rack" HorizontalAlignment="Right" Padding="10,4" FontSize="11" ToolTip="Configure Voice Presets, Noise Gate, EQ, Compressor &amp; Limiter" Click="OnOpenAudioRackClicked"/>
                             </Grid>
                         </Border>

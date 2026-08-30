@@ -17,6 +17,7 @@ using RamaverseStudio.Audio;
 using RamaverseStudio.AutoUpdate;
 using RamaverseStudio.Models;
 using RamaverseStudio.Output;
+using RamaverseStudio.Services;
 using RamaverseStudio.Storage;
 using RamaverseStudio.UI;
 using RamaverseStudio.Video;
@@ -31,6 +32,9 @@ namespace RamaverseStudio
         private CompositorEngine _compositor;
         private FFmpegRecordingEngine _recordingEngine;
         private FFmpegStreamingEngine _streamingEngine;
+        private ReplayBufferEngine _replayBuffer;
+        private ChatAggregatorService _chatService;
+        private AutoClipperEngine _autoClipper;
         private UpdateManager _updateManager;
 
         // Scenes
@@ -55,6 +59,20 @@ namespace RamaverseStudio
             _compositor = new CompositorEngine(Dispatcher, _profile.CanvasWidth, _profile.CanvasHeight, _profile.Fps);
             _recordingEngine = new FFmpegRecordingEngine();
             _streamingEngine = new FFmpegStreamingEngine();
+            _replayBuffer = new ReplayBufferEngine(30);
+            _replayBuffer.SetFormat(_profile.CanvasWidth, _profile.CanvasHeight, _profile.Fps);
+            _chatService = new ChatAggregatorService(Dispatcher);
+            LiveChatDock.BindService(_chatService);
+
+            _autoClipper = new AutoClipperEngine();
+            _autoClipper.ClipTriggered += () =>
+            {
+                Dispatcher.InvokeAsync(async () =>
+                {
+                    _chatService.AddMessage("AI Auto-Clipper", "🔥 High excitement audio detected! Saving 9:16 vertical replay clip...", ChatPlatform.System);
+                    await TriggerSaveReplayAsync(isVertical: true);
+                });
+            };
 
             // 2. Bind Canvas Preview Bitmap
             CanvasLiveImage.Source = _compositor.PreviewBitmap;
@@ -237,6 +255,7 @@ namespace RamaverseStudio
         private const int HOTKEY_ID_STREAM = 9002;
         private const int HOTKEY_ID_SNAPSHOT = 9003;
         private const int HOTKEY_ID_MUTE = 9004;
+        private const int HOTKEY_ID_REPLAY = 9005;
 
         private const uint MOD_CONTROL = 0x0002;
         private const uint MOD_SHIFT = 0x0004;
@@ -244,6 +263,7 @@ namespace RamaverseStudio
         private const uint VK_L = 0x4C;
         private const uint VK_S = 0x53;
         private const uint VK_M = 0x4D;
+        private const uint VK_F10 = 0x79;
         private const int WM_HOTKEY = 0x0312;
 
         private HwndSource? _hwndSource;
@@ -262,6 +282,7 @@ namespace RamaverseStudio
             RegisterHotKey(_windowHandle, HOTKEY_ID_STREAM, MOD_CONTROL | MOD_SHIFT, VK_L);
             RegisterHotKey(_windowHandle, HOTKEY_ID_SNAPSHOT, MOD_CONTROL | MOD_SHIFT, VK_S);
             RegisterHotKey(_windowHandle, HOTKEY_ID_MUTE, MOD_CONTROL | MOD_SHIFT, VK_M);
+            RegisterHotKey(_windowHandle, HOTKEY_ID_REPLAY, MOD_CONTROL | MOD_SHIFT, VK_F10);
         }
 
         private IntPtr HwndHook(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
@@ -285,6 +306,10 @@ namespace RamaverseStudio
                         break;
                     case HOTKEY_ID_MUTE:
                         OnMuteMicClicked(this, new RoutedEventArgs());
+                        handled = true;
+                        break;
+                    case HOTKEY_ID_REPLAY:
+                        OnSaveReplayClicked(this, new RoutedEventArgs());
                         handled = true;
                         break;
                 }
@@ -519,6 +544,8 @@ namespace RamaverseStudio
         #region Engine Frame & Audio Callbacks
         private void OnFrameComposited(byte[] bgraPixels, int width, int height, int stride)
         {
+            _replayBuffer.PushVideoFrame(bgraPixels);
+
             if (_recordingEngine.IsRecording)
             {
                 _recordingEngine.WriteVideoFrame(bgraPixels);
@@ -532,6 +559,8 @@ namespace RamaverseStudio
 
         private void OnAudioSamplesProcessed(byte[] pcm16Bytes, int bytesRead)
         {
+            _replayBuffer.PushAudioSamples(pcm16Bytes, bytesRead);
+
             if (_recordingEngine.IsRecording)
             {
                 _recordingEngine.WriteAudioSamples(pcm16Bytes, bytesRead);
@@ -583,6 +612,9 @@ namespace RamaverseStudio
             double micRmsDb = _audioEngine.CurrentRmsDb;
             MeterMic.SetLevel(micPeakDb, _audioEngine.PeakHoldDb);
             TxtMicLevelDb.Text = double.IsNegativeInfinity(micPeakDb) ? "-60.0 dB" : $"{micPeakDb:F1} dB";
+
+            // Process AI Auto-Clipper detection
+            _autoClipper.ProcessAudioLevel(_audioEngine.CurrentPeakDb, 0.033);
 
             // Update Desktop Audio VU Meter
             double desktopPeakDb = _audioEngine.DesktopPeakDb;
@@ -1139,6 +1171,98 @@ namespace RamaverseStudio
         }
         #endregion
 
+        #region Right Panel Tabs & Live Chat Dock
+        private void OnTabInspectorClicked(object sender, RoutedEventArgs e)
+        {
+            BtnTabInspector.Background = new SolidColorBrush(System.Windows.Media.Color.FromRgb(36, 36, 36));
+            BtnTabInspector.BorderBrush = new SolidColorBrush(System.Windows.Media.Color.FromRgb(68, 68, 68));
+            BtnTabInspector.Foreground = System.Windows.Media.Brushes.White;
+            BtnTabInspector.FontWeight = FontWeights.Bold;
+
+            BtnTabChat.Background = System.Windows.Media.Brushes.Transparent;
+            BtnTabChat.BorderBrush = System.Windows.Media.Brushes.Transparent;
+            BtnTabChat.Foreground = new SolidColorBrush(System.Windows.Media.Color.FromRgb(136, 136, 136));
+            BtnTabChat.FontWeight = FontWeights.Normal;
+
+            InspectorContainerGrid.Visibility = Visibility.Visible;
+            ChatContainerGrid.Visibility = Visibility.Collapsed;
+        }
+
+        private void OnTabChatClicked(object sender, RoutedEventArgs e)
+        {
+            BtnTabChat.Background = new SolidColorBrush(System.Windows.Media.Color.FromRgb(36, 36, 36));
+            BtnTabChat.BorderBrush = new SolidColorBrush(System.Windows.Media.Color.FromRgb(68, 68, 68));
+            BtnTabChat.Foreground = System.Windows.Media.Brushes.White;
+            BtnTabChat.FontWeight = FontWeights.Bold;
+
+            BtnTabInspector.Background = System.Windows.Media.Brushes.Transparent;
+            BtnTabInspector.BorderBrush = System.Windows.Media.Brushes.Transparent;
+            BtnTabInspector.Foreground = new SolidColorBrush(System.Windows.Media.Color.FromRgb(136, 136, 136));
+            BtnTabInspector.FontWeight = FontWeights.Normal;
+
+            InspectorContainerGrid.Visibility = Visibility.Collapsed;
+            ChatContainerGrid.Visibility = Visibility.Visible;
+        }
+        #endregion
+
+        #region Instant Replay Buffer & Auto-Clipper
+        private async void OnSaveReplayClicked(object sender, RoutedEventArgs e)
+        {
+            await TriggerSaveReplayAsync(isVertical: false);
+        }
+
+        private async Task TriggerSaveReplayAsync(bool isVertical)
+        {
+            BtnSaveReplay.IsEnabled = false;
+            BtnSaveReplay.Content = "SAVING...";
+
+            string destFolder = _profile.RecordingDirectory;
+            string? savedFile = await _replayBuffer.SaveReplayAsync(destFolder, _profile.Encoder, isVertical);
+
+            BtnSaveReplay.IsEnabled = true;
+            BtnSaveReplay.Content = "⚡ CLIP (30s)";
+
+            if (savedFile != null && File.Exists(savedFile))
+            {
+                _chatService.AddMessage("System", $"⚡ Replay saved: {System.IO.Path.GetFileName(savedFile)}", ChatPlatform.System);
+                
+                double sizeMb = new System.IO.FileInfo(savedFile).Length / (1024.0 * 1024.0);
+                var dlg = new RecordingCompletedDialog(savedFile, TimeSpan.FromSeconds(30), sizeMb)
+                {
+                    Owner = this
+                };
+                dlg.ShowDialog();
+            }
+        }
+        #endregion
+
+        #region Soundboard Quick SFX Handlers
+        private void OnSfxAirhornClicked(object sender, RoutedEventArgs e)
+        {
+            _audioEngine.Soundboard.PlaySound(SoundEffectType.AirHorn);
+        }
+
+        private void OnSfxVictoryClicked(object sender, RoutedEventArgs e)
+        {
+            _audioEngine.Soundboard.PlaySound(SoundEffectType.VictoryChime);
+        }
+
+        private void OnSfxLevelUpClicked(object sender, RoutedEventArgs e)
+        {
+            _audioEngine.Soundboard.PlaySound(SoundEffectType.LevelUp);
+        }
+
+        private void OnSfxLaserClicked(object sender, RoutedEventArgs e)
+        {
+            _audioEngine.Soundboard.PlaySound(SoundEffectType.Laser);
+        }
+
+        private void OnSfxBuzzerClicked(object sender, RoutedEventArgs e)
+        {
+            _audioEngine.Soundboard.PlaySound(SoundEffectType.Buzzer);
+        }
+        #endregion
+
         private void OnMainWindowClosed(object? sender, EventArgs e)
         {
             if (_windowHandle != IntPtr.Zero)
@@ -1147,10 +1271,12 @@ namespace RamaverseStudio
                 UnregisterHotKey(_windowHandle, HOTKEY_ID_STREAM);
                 UnregisterHotKey(_windowHandle, HOTKEY_ID_SNAPSHOT);
                 UnregisterHotKey(_windowHandle, HOTKEY_ID_MUTE);
+                UnregisterHotKey(_windowHandle, HOTKEY_ID_REPLAY);
             }
 
             SaveProjectState();
             _uiTimer.Stop();
+            _replayBuffer.Dispose();
             _recordingEngine.Dispose();
             _streamingEngine.Dispose();
             _compositor.Dispose();

@@ -29,6 +29,7 @@ namespace RamaverseStudio.Audio
         // Volumes
         public double MicVolume { get; set; } = 1.0;
         public double DesktopVolume { get; set; } = 0.8;
+        public SoundboardEngine Soundboard { get; } = new SoundboardEngine();
 
         // Metering state
         public float CurrentPeakDb { get; private set; } = -60.0f;
@@ -343,6 +344,12 @@ namespace RamaverseStudio.Audio
                     }
 
                     sample += desktopSample;
+                }
+
+                // Mix Soundboard Cue audio
+                if (Soundboard.TryGetNextSample(out float sfxSample))
+                {
+                    sample += sfxSample;
                 }
 
                 // Final Master Ceiling Clamp

@@ -49,6 +49,7 @@ namespace RamaverseStudio.Models
         private VideoEncoder _encoder = VideoEncoder.AutoHardware;
         private int _recordingBitrateKbps = 12000;
         private int _audioBitrateKbps = 320;
+        private bool _multiTrackAudio = false;
         private CreatorPreset _activePreset = CreatorPreset.YouTube1080p60;
 
         // Audio Device Settings
@@ -94,6 +95,7 @@ namespace RamaverseStudio.Models
         public VideoEncoder Encoder { get => _encoder; set => SetField(ref _encoder, value); }
         public int RecordingBitrateKbps { get => _recordingBitrateKbps; set => SetField(ref _recordingBitrateKbps, value); }
         public int AudioBitrateKbps { get => _audioBitrateKbps; set => SetField(ref _audioBitrateKbps, value); }
+        public bool MultiTrackAudioRecording { get => _multiTrackAudio; set => SetField(ref _multiTrackAudio, value); }
         
         public CreatorPreset ActivePreset
         {
