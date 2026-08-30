@@ -35,7 +35,7 @@ namespace RamaverseStudio.AutoUpdate
     public class UpdateManager
     {
         public static readonly Version CurrentVersion = new Version(1, 0, 0);
-        public const string DefaultUpdateUrl = "https://raw.githubusercontent.com/Jaimin-prajapati-ds/ramaverse-studio/main/update_manifest.json";
+        public const string DefaultUpdateUrl = "https://raw.githubusercontent.com/jaimin229/ramaverse-studio/main/update_manifest.json";
 
         private readonly HttpClient _httpClient;
 

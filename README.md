@@ -2,8 +2,8 @@
 
 > **Record. Stream. Create. Your complete native creator studio in one place.**
 
-[![Build & Release](https://github.com/Jaimin-prajapati-ds/ramaverse-studio/actions/workflows/build-release.yml/badge.svg)](https://github.com/Jaimin-prajapati-ds/ramaverse-studio/actions/workflows/build-release.yml)
-[![Platform](https://img.shields.io/badge/platform-Windows%2010%2F11%20x64-black.svg)](https://github.com/Jaimin-prajapati-ds/ramaverse-studio)
+[![Build & Release](https://github.com/jaimin229/ramaverse-studio/actions/workflows/build-release.yml/badge.svg)](https://github.com/jaimin229/ramaverse-studio/actions/workflows/build-release.yml)
+[![Platform](https://img.shields.io/badge/platform-Windows%2010%2F11%20x64-black.svg)](https://github.com/jaimin229/ramaverse-studio)
 [![Framework](https://img.shields.io/badge/.NET-10.0%20WPF-white.svg)](https://dotnet.microsoft.com/)
 
 ---
@@ -62,7 +62,7 @@
 
 ```bash
 # Clone the repository
-git clone https://github.com/Jaimin-prajapati-ds/ramaverse-studio.git
+git clone https://github.com/jaimin229/ramaverse-studio.git
 cd ramaverse-studio
 
 # Build and run
