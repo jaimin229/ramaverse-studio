@@ -1,0 +1,43 @@
+name: Build & Release Ramaverse Studio
+
+on:
+  push:
+    tags:
+      - 'v*'
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 10.0
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore Dependencies
+        run: dotnet restore RamaverseStudio/RamaverseStudio.csproj
+
+      - name: Build & Publish Release Binary
+        run: |
+          dotnet publish RamaverseStudio/RamaverseStudio.csproj -c Release -r win-x64 --no-self-contained -o ./output
+
+      - name: Create Release Zip Package
+        run: |
+          Compress-Archive -Path ./output/* -DestinationPath ./RamaverseStudio-win-x64.zip -Force
+
+      - name: Upload Release Asset (On Tag)
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ./RamaverseStudio-win-x64.zip
+          generate_release_notes: true

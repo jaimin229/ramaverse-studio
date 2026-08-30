@@ -1,0 +1,370 @@
+<Window x:Class="RamaverseStudio.UI.AudioFiltersDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:RamaverseStudio.UI"
+        mc:Ignorable="d"
+        Title="Audio DSP Studio &amp; Voice Effects — Ramaverse Studio" Height="680" Width="840"
+        WindowStartupLocation="CenterOwner"
+        Background="#000000" Foreground="#FFFFFF"
+        ResizeMode="NoResize" WindowStyle="ToolWindow">
+
+    <Window.Resources>
+        <Style TargetType="Slider">
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Margin" Value="0,4"/>
+        </Style>
+        <Style TargetType="CheckBox">
+            <Setter Property="Foreground" Value="#FFFFFF"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Margin" Value="0,0,0,8"/>
+        </Style>
+        <Style TargetType="Button">
+            <Setter Property="Background" Value="#141414"/>
+            <Setter Property="Foreground" Value="#FFFFFF"/>
+            <Setter Property="BorderBrush" Value="#2A2A2A"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="12,6"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="4" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#242424"/>
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="#666666"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#0A0A0A"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <StackPanel Grid.Row="0" Margin="0,0,0,16">
+            <TextBlock Text="Microphone Processing Chain &amp; DSP Effects" FontSize="16" FontWeight="Bold" Foreground="#FFFFFF"/>
+            <TextBlock Text="Signal Flow: Mic Input → Noise Suppression → Noise Gate → 3-Band EQ → Compressor → Limiter → Voice Changer → Master Output" FontSize="11" Foreground="#888888" Margin="0,3,0,0"/>
+        </StackPanel>
+
+        <!-- DSP Rack Tabs -->
+        <TabControl Grid.Row="1" Background="#0C0C0C" BorderBrush="#222222" BorderThickness="1">
+            <TabControl.Resources>
+                <Style TargetType="TabItem">
+                    <Setter Property="Foreground" Value="#888888"/>
+                    <Setter Property="FontSize" Value="11"/>
+                    <Setter Property="FontWeight" Value="Bold"/>
+                    <Setter Property="Padding" Value="14,8"/>
+                    <Setter Property="Background" Value="Transparent"/>
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="TabItem">
+                                <Border x:Name="TabBorder" Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}" Margin="0,0,2,0" CornerRadius="4,4,0,0">
+                                    <ContentPresenter ContentSource="Header"/>
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsSelected" Value="True">
+                                        <Setter TargetName="TabBorder" Property="Background" Value="#1A1A1A"/>
+                                        <Setter Property="Foreground" Value="#FFFFFF"/>
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Style>
+            </TabControl.Resources>
+
+            <!-- TAB 1: Voice Changer -->
+            <TabItem Header="VOICE CHANGER DSP">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="16">
+                    <StackPanel>
+                        <CheckBox x:Name="ChkVoiceChanger" Content="Enable Real-Time Voice Changer" Checked="OnVoiceChangerToggled" Unchecked="OnVoiceChangerToggled"/>
+                        
+                        <TextBlock Text="PRESETS" FontSize="10" FontWeight="Bold" Foreground="#888888" Margin="0,8,0,8"/>
+                        <WrapPanel x:Name="VoicePresetsWrap" Margin="0,0,0,16">
+                            <Button Content="Original" Tag="Original" Click="OnPresetClicked" Margin="0,0,6,6" Width="90"/>
+                            <Button Content="Deep Voice" Tag="DeepVoice" Click="OnPresetClicked" Margin="0,0,6,6" Width="90"/>
+                            <Button Content="High Voice" Tag="HighVoice" Click="OnPresetClicked" Margin="0,0,6,6" Width="90"/>
+                            <Button Content="Man" Tag="Man" Click="OnPresetClicked" Margin="0,0,6,6" Width="90"/>
+                            <Button Content="Woman" Tag="Woman" Click="OnPresetClicked" Margin="0,0,6,6" Width="90"/>
+                            <Button Content="Boy" Tag="Boy" Click="OnPresetClicked" Margin="0,0,6,6" Width="90"/>
+                            <Button Content="Girl" Tag="Girl" Click="OnPresetClicked" Margin="0,0,6,6" Width="90"/>
+                            <Button Content="Robot" Tag="Robot" Click="OnPresetClicked" Margin="0,0,6,6" Width="90"/>
+                            <Button Content="Alien" Tag="Alien" Click="OnPresetClicked" Margin="0,0,6,6" Width="90"/>
+                            <Button Content="Radio" Tag="Radio" Click="OnPresetClicked" Margin="0,0,6,6" Width="90"/>
+                            <Button Content="Megaphone" Tag="Megaphone" Click="OnPresetClicked" Margin="0,0,6,6" Width="95"/>
+                        </WrapPanel>
+
+                        <!-- Custom Controls -->
+                        <Border Background="#050505" BorderBrush="#222222" BorderThickness="1" CornerRadius="4" Padding="14">
+                            <StackPanel>
+                                <TextBlock Text="CUSTOM DSP PARAMETERS" FontSize="10" FontWeight="Bold" Foreground="#FFFFFF" Margin="0,0,0,10"/>
+                                
+                                <Grid Margin="0,0,0,8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="160"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="60"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="Pitch Shift (Semitones)" VerticalAlignment="Center" FontSize="12" Foreground="#CCCCCC"/>
+                                    <Slider Grid.Column="1" x:Name="SliderPitch" Minimum="-12" Maximum="12" Value="0" ValueChanged="OnDspParamChanged"/>
+                                    <TextBlock Grid.Column="2" x:Name="TxtPitchVal" Text="0.0 st" TextAlignment="Right" VerticalAlignment="Center" FontSize="11" Foreground="#888888"/>
+                                </Grid>
+
+                                <Grid Margin="0,0,0,8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="160"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="60"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="Robot Mod Carrier (Hz)" VerticalAlignment="Center" FontSize="12" Foreground="#CCCCCC"/>
+                                    <Slider Grid.Column="1" x:Name="SliderRobotMod" Minimum="0" Maximum="250" Value="0" ValueChanged="OnDspParamChanged"/>
+                                    <TextBlock Grid.Column="2" x:Name="TxtRobotVal" Text="0 Hz" TextAlignment="Right" VerticalAlignment="Center" FontSize="11" Foreground="#888888"/>
+                                </Grid>
+
+                                <Grid Margin="0,0,0,8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="160"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="60"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="Distortion / Drive" VerticalAlignment="Center" FontSize="12" Foreground="#CCCCCC"/>
+                                    <Slider Grid.Column="1" x:Name="SliderDistortion" Minimum="0" Maximum="5" Value="0" ValueChanged="OnDspParamChanged"/>
+                                    <TextBlock Grid.Column="2" x:Name="TxtDistortionVal" Text="0.0" TextAlignment="Right" VerticalAlignment="Center" FontSize="11" Foreground="#888888"/>
+                                </Grid>
+
+                                <CheckBox x:Name="ChkBandpass" Content="Resonant Bandpass Filter (Telephone / Megaphone)" Checked="OnDspParamChanged" Unchecked="OnDspParamChanged" Margin="0,6,0,0"/>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- TAB 2: Noise Gate & Suppression -->
+            <TabItem Header="NOISE GATE &amp; SUPPRESS">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="16">
+                    <StackPanel>
+                        <!-- Noise Suppression -->
+                        <Border Background="#050505" BorderBrush="#222222" BorderThickness="1" CornerRadius="4" Padding="14" Margin="0,0,0,16">
+                            <StackPanel>
+                                <CheckBox x:Name="ChkNoiseSuppression" Content="Enable Spectral Noise Suppression" IsChecked="True" Checked="OnFilterParamChanged" Unchecked="OnFilterParamChanged"/>
+                                <Grid Margin="0,6,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="140"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="60"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="Suppression (dB)" VerticalAlignment="Center" FontSize="12" Foreground="#CCCCCC"/>
+                                    <Slider Grid.Column="1" x:Name="SliderNoiseSuppression" Minimum="-60" Maximum="-10" Value="-30" ValueChanged="OnFilterParamChanged"/>
+                                    <TextBlock Grid.Column="2" x:Name="TxtNoiseSuppressionVal" Text="-30 dB" TextAlignment="Right" VerticalAlignment="Center" FontSize="11" Foreground="#888888"/>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Noise Gate -->
+                        <Border Background="#050505" BorderBrush="#222222" BorderThickness="1" CornerRadius="4" Padding="14">
+                            <StackPanel>
+                                <CheckBox x:Name="ChkNoiseGate" Content="Enable Noise Gate" IsChecked="True" Checked="OnFilterParamChanged" Unchecked="OnFilterParamChanged"/>
+                                
+                                <Grid Margin="0,6,0,8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="140"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="60"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="Close Threshold" VerticalAlignment="Center" FontSize="12" Foreground="#CCCCCC"/>
+                                    <Slider Grid.Column="1" x:Name="SliderGateThreshold" Minimum="-60" Maximum="-10" Value="-45" ValueChanged="OnFilterParamChanged"/>
+                                    <TextBlock Grid.Column="2" x:Name="TxtGateThresholdVal" Text="-45 dB" TextAlignment="Right" VerticalAlignment="Center" FontSize="11" Foreground="#888888"/>
+                                </Grid>
+
+                                <Grid Margin="0,0,0,8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="140"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="60"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="Attack Time (ms)" VerticalAlignment="Center" FontSize="12" Foreground="#CCCCCC"/>
+                                    <Slider Grid.Column="1" x:Name="SliderGateAttack" Minimum="1" Maximum="100" Value="15" ValueChanged="OnFilterParamChanged"/>
+                                    <TextBlock Grid.Column="2" x:Name="TxtGateAttackVal" Text="15 ms" TextAlignment="Right" VerticalAlignment="Center" FontSize="11" Foreground="#888888"/>
+                                </Grid>
+
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="140"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="60"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="Release Time (ms)" VerticalAlignment="Center" FontSize="12" Foreground="#CCCCCC"/>
+                                    <Slider Grid.Column="1" x:Name="SliderGateRelease" Minimum="20" Maximum="1000" Value="150" ValueChanged="OnFilterParamChanged"/>
+                                    <TextBlock Grid.Column="2" x:Name="TxtGateReleaseVal" Text="150 ms" TextAlignment="Right" VerticalAlignment="Center" FontSize="11" Foreground="#888888"/>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- TAB 3: 3-Band Equalizer -->
+            <TabItem Header="3-BAND EQUALIZER">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="16">
+                    <StackPanel>
+                        <CheckBox x:Name="ChkEq" Content="Enable 3-Band Parametric Equalizer" IsChecked="True" Checked="OnFilterParamChanged" Unchecked="OnFilterParamChanged"/>
+
+                        <Border Background="#050505" BorderBrush="#222222" BorderThickness="1" CornerRadius="4" Padding="14" Margin="0,10,0,0">
+                            <StackPanel>
+                                <!-- Low -->
+                                <Grid Margin="0,0,0,12">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="160"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="60"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel>
+                                        <TextBlock Text="Low Shelf (100 Hz)" FontSize="12" FontWeight="SemiBold" Foreground="#FFFFFF"/>
+                                        <TextBlock Text="Warmth &amp; Body" FontSize="10" Foreground="#666666"/>
+                                    </StackPanel>
+                                    <Slider Grid.Column="1" x:Name="SliderEqLow" Minimum="-15" Maximum="15" Value="1.5" ValueChanged="OnFilterParamChanged"/>
+                                    <TextBlock Grid.Column="2" x:Name="TxtEqLowVal" Text="+1.5 dB" TextAlignment="Right" VerticalAlignment="Center" FontSize="11" Foreground="#888888"/>
+                                </Grid>
+
+                                <!-- Mid -->
+                                <Grid Margin="0,0,0,12">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="160"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="60"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel>
+                                        <TextBlock Text="Mid Peaking (1.2 kHz)" FontSize="12" FontWeight="SemiBold" Foreground="#FFFFFF"/>
+                                        <TextBlock Text="Vocal Clarity &amp; Presence" FontSize="10" Foreground="#666666"/>
+                                    </StackPanel>
+                                    <Slider Grid.Column="1" x:Name="SliderEqMid" Minimum="-15" Maximum="15" Value="0" ValueChanged="OnFilterParamChanged"/>
+                                    <TextBlock Grid.Column="2" x:Name="TxtEqMidVal" Text="0.0 dB" TextAlignment="Right" VerticalAlignment="Center" FontSize="11" Foreground="#888888"/>
+                                </Grid>
+
+                                <!-- High -->
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="160"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="60"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel>
+                                        <TextBlock Text="High Shelf (8 kHz)" FontSize="12" FontWeight="SemiBold" Foreground="#FFFFFF"/>
+                                        <TextBlock Text="Air &amp; Crispness" FontSize="10" Foreground="#666666"/>
+                                    </StackPanel>
+                                    <Slider Grid.Column="1" x:Name="SliderEqHigh" Minimum="-15" Maximum="15" Value="2.0" ValueChanged="OnFilterParamChanged"/>
+                                    <TextBlock Grid.Column="2" x:Name="TxtEqHighVal" Text="+2.0 dB" TextAlignment="Right" VerticalAlignment="Center" FontSize="11" Foreground="#888888"/>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- TAB 4: Compressor & Limiter -->
+            <TabItem Header="COMPRESSOR &amp; LIMITER">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="16">
+                    <StackPanel>
+                        <!-- Compressor -->
+                        <Border Background="#050505" BorderBrush="#222222" BorderThickness="1" CornerRadius="4" Padding="14" Margin="0,0,0,16">
+                            <StackPanel>
+                                <CheckBox x:Name="ChkCompressor" Content="Enable Dynamic Compressor" IsChecked="True" Checked="OnFilterParamChanged" Unchecked="OnFilterParamChanged"/>
+
+                                <Grid Margin="0,6,0,8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="140"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="60"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="Threshold (dB)" VerticalAlignment="Center" FontSize="12" Foreground="#CCCCCC"/>
+                                    <Slider Grid.Column="1" x:Name="SliderCompThreshold" Minimum="-40" Maximum="0" Value="-18" ValueChanged="OnFilterParamChanged"/>
+                                    <TextBlock Grid.Column="2" x:Name="TxtCompThresholdVal" Text="-18 dB" TextAlignment="Right" VerticalAlignment="Center" FontSize="11" Foreground="#888888"/>
+                                </Grid>
+
+                                <Grid Margin="0,0,0,8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="140"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="60"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="Ratio" VerticalAlignment="Center" FontSize="12" Foreground="#CCCCCC"/>
+                                    <Slider Grid.Column="1" x:Name="SliderCompRatio" Minimum="1" Maximum="20" Value="4" ValueChanged="OnFilterParamChanged"/>
+                                    <TextBlock Grid.Column="2" x:Name="TxtCompRatioVal" Text="4:1" TextAlignment="Right" VerticalAlignment="Center" FontSize="11" Foreground="#888888"/>
+                                </Grid>
+
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="140"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="60"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="Makeup Gain (dB)" VerticalAlignment="Center" FontSize="12" Foreground="#CCCCCC"/>
+                                    <Slider Grid.Column="1" x:Name="SliderCompMakeup" Minimum="0" Maximum="24" Value="3" ValueChanged="OnFilterParamChanged"/>
+                                    <TextBlock Grid.Column="2" x:Name="TxtCompMakeupVal" Text="+3 dB" TextAlignment="Right" VerticalAlignment="Center" FontSize="11" Foreground="#888888"/>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Limiter -->
+                        <Border Background="#050505" BorderBrush="#222222" BorderThickness="1" CornerRadius="4" Padding="14">
+                            <StackPanel>
+                                <CheckBox x:Name="ChkLimiter" Content="Enable Brickwall Limiter (Prevents Digital Clipping)" IsChecked="True" Checked="OnFilterParamChanged" Unchecked="OnFilterParamChanged"/>
+
+                                <Grid Margin="0,6,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="140"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="60"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="Ceiling Threshold" VerticalAlignment="Center" FontSize="12" Foreground="#CCCCCC"/>
+                                    <Slider Grid.Column="1" x:Name="SliderLimiterThreshold" Minimum="-12" Maximum="0" Value="-1" ValueChanged="OnFilterParamChanged"/>
+                                    <TextBlock Grid.Column="2" x:Name="TxtLimiterThresholdVal" Text="-1.0 dB" TextAlignment="Right" VerticalAlignment="Center" FontSize="11" Foreground="#888888"/>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+        </TabControl>
+
+        <!-- Live Audio Metering in Dialog -->
+        <Border Grid.Row="2" Background="#0C0C0C" BorderBrush="#222222" BorderThickness="1" CornerRadius="4" Padding="12" Margin="0,12,0,0">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="100"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="80"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="LIVE MIC LEVEL" VerticalAlignment="Center" FontSize="10" FontWeight="Bold" Foreground="#888888"/>
+                <local:AudioMeterControl Grid.Column="1" x:Name="LiveMicMeter" Margin="8,0"/>
+                <TextBlock Grid.Column="2" x:Name="TxtLiveDb" Text="-60 dBFS" TextAlignment="Right" VerticalAlignment="Center" FontSize="11" Foreground="#FFFFFF" FontWeight="Bold"/>
+            </Grid>
+        </Border>
+
+        <!-- Action Footer -->
+        <Border Grid.Row="3" Margin="0,14,0,0">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Content="Done" Background="#FFFFFF" Foreground="#000000" BorderBrush="#FFFFFF" FontWeight="Bold" Padding="20,8" Click="OnDoneClicked"/>
+            </StackPanel>
+        </Border>
+    </Grid>
+</Window>

@@ -1,0 +1,88 @@
+<Window x:Class="RamaverseStudio.UI.UpdateDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Title="Software Update — Ramaverse Studio" Height="420" Width="520"
+        WindowStartupLocation="CenterOwner"
+        Background="#000000" Foreground="#FFFFFF"
+        ResizeMode="NoResize" WindowStyle="ToolWindow">
+
+    <Window.Resources>
+        <Style TargetType="Button">
+            <Setter Property="Background" Value="#1A1A1A"/>
+            <Setter Property="Foreground" Value="#FFFFFF"/>
+            <Setter Property="BorderBrush" Value="#333333"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="14,8"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="4" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#2A2A2A"/>
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="#666666"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#111111"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <StackPanel Grid.Row="0" Margin="0,0,0,16">
+            <StackPanel Orientation="Horizontal">
+                <Border Background="#FFFFFF" CornerRadius="4" Width="24" Height="24" Margin="0,0,10,0">
+                    <TextBlock Text="↑" FontSize="14" FontWeight="Bold" Foreground="#000000" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+                <TextBlock Text="Software Update Available" FontSize="16" FontWeight="Bold" Foreground="#FFFFFF" VerticalAlignment="Center"/>
+            </StackPanel>
+            <TextBlock x:Name="TxtVersionHeader" Text="A new version of Ramaverse Studio is ready to install." FontSize="12" Foreground="#888888" Margin="0,6,0,0"/>
+        </StackPanel>
+
+        <!-- Release Notes Box -->
+        <Border Grid.Row="1" Background="#0F0F0F" BorderBrush="#262626" BorderThickness="1" CornerRadius="4" Padding="14">
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <StackPanel>
+                    <TextBlock Text="RELEASE NOTES &amp; CHANGELOG" FontSize="10" FontWeight="Bold" Foreground="#888888" Margin="0,0,0,8"/>
+                    <TextBlock x:Name="TxtReleaseNotes" Text="• High performance monochrome UI overhaul&#x0a;• Real-time Phone Camera RTSP stream receiver&#x0a;• Dual Canvas landscape + vertical mode&#x0a;• Project auto-save &amp; scene persistence" 
+                               FontSize="12" Foreground="#CCCCCC" TextWrapping="Wrap" LineHeight="18"/>
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
+
+        <!-- Download Progress Bar -->
+        <StackPanel Grid.Row="2" x:Name="PanelProgress" Margin="0,14,0,0" Visibility="Collapsed">
+            <Grid Margin="0,0,0,4">
+                <TextBlock Text="Downloading update package..." FontSize="11" Foreground="#888888"/>
+                <TextBlock x:Name="TxtProgressPercent" Text="0%" HorizontalAlignment="Right" FontSize="11" FontWeight="Bold" Foreground="#FFFFFF"/>
+            </Grid>
+            <ProgressBar x:Name="ProgressBarDownload" Height="6" Background="#1A1A1A" Foreground="#FFFFFF" BorderThickness="0"/>
+        </StackPanel>
+
+        <!-- Action Buttons -->
+        <Grid Grid.Row="3" Margin="0,18,0,0">
+            <Button x:Name="BtnLater" Content="Remind Me Later" HorizontalAlignment="Left" Click="OnLaterClicked"/>
+            <Button x:Name="BtnInstall" Content="Download &amp; Install Update" HorizontalAlignment="Right" Background="#FFFFFF" Foreground="#000000" BorderBrush="#FFFFFF" FontWeight="Bold" Click="OnInstallUpdateClicked"/>
+        </Grid>
+    </Grid>
+</Window>

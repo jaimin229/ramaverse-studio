@@ -1,0 +1,22 @@
+# Visual Studio / .NET
+[Bb]in/
+[Oo]bj/
+[Pp]ublish/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+.vs/
+.vscode/
+
+# GitHub CLI binary
+/bin/
+/gh.exe
+/LICENSE
+
+# OS generated
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+.DS_Store

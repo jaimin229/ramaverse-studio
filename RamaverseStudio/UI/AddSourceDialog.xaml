@@ -1,0 +1,222 @@
+<Window x:Class="RamaverseStudio.UI.AddSourceDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Title="Add Source — Ramaverse Studio" Height="530" Width="680"
+        WindowStartupLocation="CenterOwner"
+        Background="#000000" Foreground="#FFFFFF"
+        ResizeMode="NoResize" WindowStyle="ToolWindow">
+    <Window.Resources>
+        <Style TargetType="Button">
+            <Setter Property="Background" Value="#141414"/>
+            <Setter Property="Foreground" Value="#FFFFFF"/>
+            <Setter Property="BorderBrush" Value="#2A2A2A"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="14,7"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="4" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#242424"/>
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="#666666"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#0A0A0A"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style TargetType="TextBox">
+            <Setter Property="Background" Value="#0F0F0F"/>
+            <Setter Property="Foreground" Value="#FFFFFF"/>
+            <Setter Property="BorderBrush" Value="#2A2A2A"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="8,6"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+        </Style>
+
+        <Style TargetType="ComboBox">
+            <Setter Property="Background" Value="#0F0F0F"/>
+            <Setter Property="Foreground" Value="#FFFFFF"/>
+            <Setter Property="BorderBrush" Value="#2A2A2A"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="8,6"/>
+            <Setter Property="FontSize" Value="12"/>
+        </Style>
+
+        <Style TargetType="CheckBox">
+            <Setter Property="Foreground" Value="#CCCCCC"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <StackPanel Grid.Row="0" Margin="0,0,0,16">
+            <TextBlock Text="Add Production Source" FontSize="16" FontWeight="Bold" Foreground="#FFFFFF"/>
+            <TextBlock Text="Select a capture source type and configure properties" FontSize="11" Foreground="#888888" Margin="0,3,0,0"/>
+        </StackPanel>
+
+        <!-- Source Types & Config -->
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="220"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Left: Source Type List -->
+            <Border Grid.Column="0" Background="#0C0C0C" BorderBrush="#222222" BorderThickness="1" CornerRadius="4" Padding="4" Margin="0,0,12,0">
+                <ListBox x:Name="SourceTypeListBox" Background="Transparent" BorderThickness="0" SelectionChanged="OnSourceTypeSelectionChanged">
+                    <ListBox.ItemContainerStyle>
+                        <Style TargetType="ListBoxItem">
+                            <Setter Property="Foreground" Value="#AAAAAA"/>
+                            <Setter Property="Padding" Value="10,8"/>
+                            <Setter Property="Margin" Value="0,1"/>
+                            <Setter Property="Cursor" Value="Hand"/>
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="ListBoxItem">
+                                        <Border x:Name="ItemBorder" Background="Transparent" CornerRadius="3" Padding="{TemplateBinding Padding}">
+                                            <ContentPresenter/>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsSelected" Value="True">
+                                                <Setter TargetName="ItemBorder" Property="Background" Value="#222222"/>
+                                                <Setter Property="Foreground" Value="#FFFFFF"/>
+                                                <Setter Property="FontWeight" Value="SemiBold"/>
+                                            </Trigger>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="ItemBorder" Property="Background" Value="#171717"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </ListBox.ItemContainerStyle>
+                    <ListBoxItem Content="Display Capture" Tag="DisplayCapture" IsSelected="True"/>
+                    <ListBoxItem Content="Window Capture" Tag="WindowCapture"/>
+                    <ListBoxItem Content="Camera / Capture Card" Tag="VideoCaptureDevice"/>
+                    <ListBoxItem Content="Phone Camera (Wireless / IP)" Tag="PhoneCamera"/>
+                    <ListBoxItem Content="Media Video File" Tag="MediaFile"/>
+                    <ListBoxItem Content="Image Overlay" Tag="ImageOverlay"/>
+                    <ListBoxItem Content="Text Overlay (GDI+)" Tag="TextOverlay"/>
+                    <ListBoxItem Content="Solid Color Fill" Tag="ColorSource"/>
+                </ListBox>
+            </Border>
+
+            <!-- Right: Parameters Box -->
+            <Border Grid.Column="1" Background="#0C0C0C" BorderBrush="#222222" BorderThickness="1" CornerRadius="4" Padding="16">
+                <StackPanel>
+                    <!-- Source Name -->
+                    <TextBlock Text="SOURCE NAME" FontSize="10" FontWeight="Bold" Foreground="#888888" Margin="0,0,0,5"/>
+                    <TextBox x:Name="TxtSourceName" Text="Display Capture" Margin="0,0,0,16"/>
+
+                    <!-- Panel for Display Capture -->
+                    <StackPanel x:Name="PanelDisplayCapture">
+                        <TextBlock Text="SELECT MONITOR" FontSize="10" FontWeight="Bold" Foreground="#888888" Margin="0,0,0,5"/>
+                        <ComboBox x:Name="ComboDisplays" Margin="0,0,0,12"/>
+                        <CheckBox x:Name="ChkCaptureCursor" Content="Capture Mouse Cursor" IsChecked="True"/>
+                    </StackPanel>
+
+                    <!-- Panel for Window Capture -->
+                    <StackPanel x:Name="PanelWindowCapture" Visibility="Collapsed">
+                        <Grid Margin="0,0,0,5">
+                            <TextBlock Text="ACTIVE WINDOW" FontSize="10" FontWeight="Bold" Foreground="#888888"/>
+                            <Button Content="Refresh List" HorizontalAlignment="Right" Padding="6,2" FontSize="10" Click="OnRefreshWindowsClicked"/>
+                        </Grid>
+                        <ComboBox x:Name="ComboWindows" Margin="0,0,0,12"/>
+                    </StackPanel>
+
+                    <!-- Panel for Video Capture Device -->
+                    <StackPanel x:Name="PanelCameraCapture" Visibility="Collapsed">
+                        <TextBlock Text="CAMERA DEVICE" FontSize="10" FontWeight="Bold" Foreground="#888888" Margin="0,0,0,5"/>
+                        <ComboBox x:Name="ComboCameras" Margin="0,0,0,12"/>
+                        <CheckBox x:Name="ChkCameraFlipH" Content="Flip Horizontally (Mirror)" Margin="0,0,0,6"/>
+                        <CheckBox x:Name="ChkCameraChromaKey" Content="Enable Green Screen (Chroma Key)"/>
+                    </StackPanel>
+
+                    <!-- Panel for Phone Camera -->
+                    <StackPanel x:Name="PanelPhoneCamera" Visibility="Collapsed">
+                        <TextBlock Text="PHONE CAMERA STREAM URL (MJPEG / RTSP / IP WEBCAM)" FontSize="10" FontWeight="Bold" Foreground="#888888" Margin="0,0,0,5"/>
+                        <TextBox x:Name="TxtPhoneUrl" Text="http://192.168.1.100:8080/video" Margin="0,0,0,10"/>
+                        <TextBlock Text="Compatible with DroidCam, IP Webcam (Android), EpocCam (iOS) over WiFi." FontSize="11" Foreground="#666666" Margin="0,0,0,8"/>
+                        <CheckBox x:Name="ChkPhoneFlipH" Content="Flip Horizontally (Mirror)"/>
+                    </StackPanel>
+
+                    <!-- Panel for Media / Image -->
+                    <StackPanel x:Name="PanelMediaFile" Visibility="Collapsed">
+                        <TextBlock Text="FILE PATH" FontSize="10" FontWeight="Bold" Foreground="#888888" Margin="0,0,0,5"/>
+                        <Grid Margin="0,0,0,12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBox x:Name="TxtFilePath" IsReadOnly="True" Margin="0,0,8,0"/>
+                            <Button Grid.Column="1" Content="Browse..." Click="OnBrowseFileClicked"/>
+                        </Grid>
+                        <CheckBox x:Name="ChkLoopMedia" Content="Loop playback indefinitely" IsChecked="True"/>
+                    </StackPanel>
+
+                    <!-- Panel for Text -->
+                    <StackPanel x:Name="PanelTextOverlay" Visibility="Collapsed">
+                        <TextBlock Text="TEXT CONTENT" FontSize="10" FontWeight="Bold" Foreground="#888888" Margin="0,0,0,5"/>
+                        <TextBox x:Name="TxtOverlayContent" Text="RAMAVERSE STUDIO" Margin="0,0,0,10"/>
+                        <Grid Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0" Margin="0,0,6,0">
+                                <TextBlock Text="FONT SIZE (PX)" FontSize="10" Foreground="#888888" Margin="0,0,0,3"/>
+                                <TextBox x:Name="TxtFontSize" Text="44"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="1" Margin="6,0,0,0">
+                                <TextBlock Text="FONT FAMILY" FontSize="10" Foreground="#888888" Margin="0,0,0,3"/>
+                                <TextBox x:Name="TxtFontFamily" Text="Segoe UI"/>
+                            </StackPanel>
+                        </Grid>
+                        <StackPanel Orientation="Horizontal">
+                            <CheckBox x:Name="ChkBold" Content="Bold" IsChecked="True" Margin="0,0,16,0"/>
+                            <CheckBox x:Name="ChkItalic" Content="Italic"/>
+                        </StackPanel>
+                    </StackPanel>
+
+                    <!-- Panel for Solid Color -->
+                    <StackPanel x:Name="PanelColorSource" Visibility="Collapsed">
+                        <TextBlock Text="PRESET SOLID COLORS" FontSize="10" FontWeight="Bold" Foreground="#888888" Margin="0,0,0,8"/>
+                        <WrapPanel x:Name="ColorPresetsWrap"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <!-- Footer Actions -->
+        <Border Grid.Row="2" Margin="0,16,0,0">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Content="Cancel" Click="OnCancelClicked" Margin="0,0,10,0"/>
+                <Button Content="Add Source" Background="#FFFFFF" Foreground="#000000" BorderBrush="#FFFFFF" FontWeight="Bold" Click="OnAddSourceClicked"/>
+            </StackPanel>
+        </Border>
+    </Grid>
+</Window>
