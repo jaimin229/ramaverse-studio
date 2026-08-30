@@ -10,6 +10,7 @@ namespace RamaverseStudio.Audio
     public class AudioEngine : IDisposable
     {
         private IWaveIn? _waveIn;
+        private WasapiLoopbackCapture? _loopbackCapture;
         private readonly int _sampleRate = 48000;
         private readonly int _channels = 2;
 
@@ -24,13 +25,17 @@ namespace RamaverseStudio.Audio
 
         public AudioFilterSettings FilterSettings { get; } = new AudioFilterSettings();
 
+        // Volumes
+        public double MicVolume { get; set; } = 1.0;
+        public double DesktopVolume { get; set; } = 0.8;
+
         // Metering state
         public float CurrentPeakDb { get; private set; } = -60.0f;
         public float CurrentRmsDb { get; private set; } = -60.0f;
         public float PeakHoldDb { get; private set; } = -60.0f;
         private float _peakHoldTimer = 0;
 
-        // Desktop audio simulated / loopback peak
+        // Desktop audio real WASAPI loopback peak
         public float DesktopPeakDb { get; private set; } = -60.0f;
 
         // Event for raw processed PCM (16-bit 48kHz stereo) for FFmpeg recorder / streamer
@@ -101,6 +106,7 @@ namespace RamaverseStudio.Audio
         {
             Stop();
 
+            // 1. Microphone capture
             try
             {
                 var waveIn = new WaveIn
@@ -116,7 +122,6 @@ namespace RamaverseStudio.Audio
             }
             catch (Exception)
             {
-                // Fallback to default if selected index fails
                 try
                 {
                     var waveIn = new WaveIn
@@ -135,6 +140,16 @@ namespace RamaverseStudio.Audio
                     IsRunning = false;
                 }
             }
+
+            // 2. Real Desktop Audio WASAPI Loopback capture
+            try
+            {
+                var loopback = new WasapiLoopbackCapture();
+                loopback.DataAvailable += OnLoopbackDataAvailable;
+                loopback.StartRecording();
+                _loopbackCapture = loopback;
+            }
+            catch { }
         }
 
         public void Stop()
@@ -150,9 +165,42 @@ namespace RamaverseStudio.Audio
                 catch { }
                 _waveIn = null;
             }
+
+            if (_loopbackCapture != null)
+            {
+                try
+                {
+                    _loopbackCapture.DataAvailable -= OnLoopbackDataAvailable;
+                    _loopbackCapture.StopRecording();
+                    _loopbackCapture.Dispose();
+                }
+                catch { }
+                _loopbackCapture = null;
+            }
+
             IsRunning = false;
             CurrentPeakDb = -60.0f;
             CurrentRmsDb = -60.0f;
+            DesktopPeakDb = -60.0f;
+        }
+
+        private void OnLoopbackDataAvailable(object? sender, WaveInEventArgs e)
+        {
+            if (e.BytesRecorded == 0) return;
+
+            // IEEE Float 32-bit samples from WASAPI loopback
+            int sampleCount = e.BytesRecorded / 4;
+            float maxAbs = 0.0f;
+
+            for (int i = 0; i < sampleCount; i++)
+            {
+                float sample = BitConverter.ToSingle(e.Buffer, i * 4) * (float)DesktopVolume;
+                float abs = Math.Abs(sample);
+                if (abs > maxAbs) maxAbs = abs;
+            }
+
+            float db = maxAbs > 1e-5f ? (float)(20.0 * Math.Log10(maxAbs)) : -60.0f;
+            DesktopPeakDb = Math.Clamp(db, -60.0f, 0.0f);
         }
 
         private void OnDataAvailable(object? sender, WaveInEventArgs e)
@@ -165,7 +213,7 @@ namespace RamaverseStudio.Audio
             float maxAbsSample = 0.0f;
             double sumSquares = 0.0;
 
-            float inputGainLinear = (float)Math.Pow(10.0, FilterSettings.InputGainDb / 20.0);
+            float inputGainLinear = (float)(Math.Pow(10.0, FilterSettings.InputGainDb / 20.0) * MicVolume);
             bool isMuted = FilterSettings.IsMuted;
 
             for (int i = 0; i < sampleCount; i++)
@@ -179,7 +227,7 @@ namespace RamaverseStudio.Audio
                 }
                 else
                 {
-                    // 1. Noise Suppression (attenuate low level ambient hiss)
+                    // 1. Noise Suppression
                     if (FilterSettings.NoiseSuppressionEnabled && Math.Abs(sample) < 0.015f)
                     {
                         float suppressionFactor = (float)Math.Pow(10.0, FilterSettings.NoiseSuppressionAmountDb / 40.0);
@@ -251,26 +299,22 @@ namespace RamaverseStudio.Audio
             CurrentPeakDb = Math.Clamp(peakDb, -60.0f, 0.0f);
             CurrentRmsDb = Math.Clamp(rmsDb, -60.0f, 0.0f);
 
-            if (CurrentPeakDb >= PeakHoldDb)
+            if (CurrentPeakDb > PeakHoldDb)
             {
                 PeakHoldDb = CurrentPeakDb;
-                _peakHoldTimer = 1.2f; // hold for 1.2s
+                _peakHoldTimer = 0;
             }
             else
             {
-                _peakHoldTimer -= 0.02f;
-                if (_peakHoldTimer <= 0)
+                _peakHoldTimer += 0.02f;
+                if (_peakHoldTimer > 1.2f)
                 {
                     PeakHoldDb = Math.Max(-60.0f, PeakHoldDb - 1.5f);
                 }
             }
 
+            // Deliver real 16-bit PCM to recorder / streamer
             AudioSamplesProcessed?.Invoke(outputBytes, outputBytes.Length);
-        }
-
-        public void UpdateDesktopAudioMeter(float levelDb)
-        {
-            DesktopPeakDb = Math.Clamp(levelDb, -60.0f, 0.0f);
         }
 
         public void Dispose()

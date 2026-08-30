@@ -497,6 +497,11 @@ namespace RamaverseStudio
             MeterMic.SetLevel(micPeakDb, _audioEngine.PeakHoldDb);
             TxtMicLevelDb.Text = double.IsNegativeInfinity(micPeakDb) ? "-60.0 dB" : $"{micPeakDb:F1} dB";
 
+            // Update Desktop Audio VU Meter
+            double desktopPeakDb = _audioEngine.DesktopPeakDb;
+            MeterDesktop.SetLevel(desktopPeakDb, desktopPeakDb);
+            TxtDesktopLevelDb.Text = double.IsNegativeInfinity(desktopPeakDb) ? "-60.0 dB" : $"{desktopPeakDb:F1} dB";
+
             // Update Voice Changer preset badge
             TxtVoicePresetLabel.Text = _audioEngine.FilterSettings.VoiceChangerEnabled ? _audioEngine.FilterSettings.VoiceChangerPreset.ToString() : "Clean";
 
@@ -977,11 +982,23 @@ namespace RamaverseStudio
 
         private void OnMuteDesktopClicked(object sender, RoutedEventArgs e)
         {
-            BtnMuteDesktop.Content = BtnMuteDesktop.Content.ToString() == "Mute" ? "Unmute" : "Mute";
+            if (_audioEngine == null) return;
+            if (_audioEngine.DesktopVolume > 0)
+            {
+                _audioEngine.DesktopVolume = 0;
+                BtnMuteDesktop.Content = "Unmute";
+            }
+            else
+            {
+                _audioEngine.DesktopVolume = SliderDesktopVolume.Value;
+                BtnMuteDesktop.Content = "Mute";
+            }
         }
 
         private void OnDesktopVolumeChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
+            if (_audioEngine == null) return;
+            _audioEngine.DesktopVolume = SliderDesktopVolume.Value;
             if (TxtDesktopVolVal != null) TxtDesktopVolVal.Text = $"{(SliderDesktopVolume.Value * 100):F0}%";
         }
         #endregion
