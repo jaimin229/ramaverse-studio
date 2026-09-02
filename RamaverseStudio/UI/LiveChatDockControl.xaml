@@ -1,30 +1,52 @@
 <UserControl x:Class="RamaverseStudio.UI.LiveChatDockControl"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             mc:Ignorable="d" 
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d"
              d:DesignHeight="300" d:DesignWidth="260"
              Background="#0C0C0C">
-    
+
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="32"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
         <!-- Header -->
-        <Border Grid.Row="0" Background="#141414" BorderBrush="#222222" BorderThickness="0,0,0,1" Padding="10,0">
-            <Grid VerticalAlignment="Center">
-                <StackPanel Orientation="Horizontal">
-                    <TextBlock Text="💬 LIVE CHAT &amp; ALERTS" FontSize="10" FontWeight="Bold" Foreground="#888888" VerticalAlignment="Center"/>
-                </StackPanel>
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                    <Button Content="Test Alert" Padding="6,2" FontSize="9" Click="OnTestAlertClicked" Margin="0,0,4,0"/>
-                    <Button Content="Clear" Padding="6,2" FontSize="9" Click="OnClearChatClicked"/>
-                </StackPanel>
-            </Grid>
+        <Border Grid.Row="0" Background="#141414" BorderBrush="#222222" BorderThickness="0,0,0,1" Padding="10,6">
+            <StackPanel>
+                <Grid>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="LIVE CHAT &amp; ALERTS" FontSize="10" FontWeight="Bold" Foreground="#888888" VerticalAlignment="Center"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Content="Test Alert" Padding="6,2" FontSize="9" Click="OnTestAlertClicked" Margin="0,0,4,0"/>
+                        <Button Content="Clear" Padding="6,2" FontSize="9" Click="OnClearChatClicked"/>
+                    </StackPanel>
+                </Grid>
+
+                <!-- Multi-Platform Connection Row -->
+                <Grid Margin="0,6,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="70"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <ComboBox x:Name="ComboPlatform" FontSize="10" Padding="4,2" SelectedIndex="0" SelectionChanged="OnPlatformSelectionChanged">
+                        <ComboBoxItem Content="Twitch"/>
+                        <ComboBoxItem Content="YouTube"/>
+                        <ComboBoxItem Content="Kick"/>
+                    </ComboBox>
+                    <TextBox Grid.Column="1" x:Name="TxtChannelInput" FontSize="11" Padding="6,3" Margin="4,0,0,0"
+                             ToolTip="Channel Name or YouTube Live Video ID"/>
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" Margin="4,0,0,0">
+                        <Button x:Name="BtnConnectPlatform" Content="Connect" Padding="8,3" FontSize="10" FontWeight="Bold" Click="OnConnectPlatformClicked"/>
+                    </StackPanel>
+                </Grid>
+                <TextBlock x:Name="TxtChatStatus" Text="Live chat: offline (ready to connect)" FontSize="9" Foreground="#666666" Margin="0,4,0,0"/>
+            </StackPanel>
         </Border>
 
         <!-- Chat List -->
@@ -37,10 +59,19 @@
                                 <Grid Margin="0,0,0,2">
                                     <StackPanel Orientation="Horizontal">
                                         <TextBlock Text="{Binding Timestamp}" FontSize="9" Foreground="#666666" Margin="0,0,6,0" VerticalAlignment="Center"/>
-                                        <TextBlock Text="{Binding Sender}" FontSize="11" FontWeight="Bold" Foreground="#FFFFFF" VerticalAlignment="Center"/>
+                                        <TextBlock Text="{Binding Sender}" FontSize="11" FontWeight="Bold" Foreground="#FFFFFF" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                                        <!-- Role badges: vector monochrome -->
+                                        <Border Background="#2A2A2A" CornerRadius="2" Padding="3,0" Margin="4,0,0,0" VerticalAlignment="Center"
+                                                Visibility="{Binding IsModerator, Converter={StaticResource BoolToVis}}">
+                                            <TextBlock Text="MOD" FontSize="8" FontWeight="Black" Foreground="#FFFFFF"/>
+                                        </Border>
+                                        <Border Background="#1F1F1F" CornerRadius="2" Padding="3,0" Margin="2,0,0,0" VerticalAlignment="Center"
+                                                Visibility="{Binding IsSubscriber, Converter={StaticResource BoolToVis}}">
+                                            <TextBlock Text="SUB" FontSize="8" FontWeight="Black" Foreground="#BBBBBB"/>
+                                        </Border>
                                     </StackPanel>
                                     <Border HorizontalAlignment="Right" Background="#242424" CornerRadius="2" Padding="4,1">
-                                        <TextBlock Text="{Binding Platform}" FontSize="8" FontWeight="Bold" Foreground="#AAAAAA"/>
+                                        <TextBlock Text="{Binding PlatformLetter}" FontSize="8" FontWeight="Bold" Foreground="#AAAAAA"/>
                                     </Border>
                                 </Grid>
                                 <TextBlock Text="{Binding Message}" FontSize="11" Foreground="#CCCCCC" TextWrapping="Wrap" LineHeight="15"/>
@@ -51,14 +82,15 @@
             </ItemsControl>
         </ScrollViewer>
 
-        <!-- Chat Input Simulation / Broadcaster Quick Message -->
+        <!-- Broadcaster Quick Message -->
         <Border Grid.Row="2" Background="#101010" BorderBrush="#222222" BorderThickness="0,1,0,0" Padding="8">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
-                <TextBox x:Name="TxtChatMessage" Margin="0,0,6,0" KeyDown="OnChatInputKeyDown"/>
+                <TextBox x:Name="TxtChatMessage" Margin="0,0,6,0" KeyDown="OnChatInputKeyDown"
+                         ToolTip="Type a message to appear in your chat overlay log (visible to you)"/>
                 <Button Grid.Column="1" Content="Send" Padding="10,4" FontSize="11" Click="OnSendMessageClicked"/>
             </Grid>
         </Border>

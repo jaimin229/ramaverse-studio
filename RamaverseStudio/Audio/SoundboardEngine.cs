@@ -34,6 +34,32 @@ namespace RamaverseStudio.Audio
 
         public double Volume { get; set; } = 0.8;
         private readonly ConcurrentQueue<float> _audioSampleQueue = new ConcurrentQueue<float>();
+        public System.Collections.ObjectModel.ObservableCollection<SoundboardItem> CustomPads { get; } = new();
+
+        public void AddCustomPad(string name, string filePath, string icon = "🎵")
+        {
+            CustomPads.Add(new SoundboardItem
+            {
+                Name = name,
+                CustomFilePath = filePath,
+                Icon = icon,
+                EffectType = SoundEffectType.Custom
+            });
+        }
+
+        public void PlayPadByIndex(int index)
+        {
+            if (index >= 0 && index < CustomPads.Count)
+            {
+                var pad = CustomPads[index];
+                PlaySound(pad.EffectType, pad.CustomFilePath);
+            }
+        }
+
+        public void StopAll()
+        {
+            while (_audioSampleQueue.TryDequeue(out _)) { }
+        }
 
         public void PlaySound(SoundEffectType effect, string? filePath = null)
         {
@@ -64,19 +90,13 @@ namespace RamaverseStudio.Audio
         {
             try
             {
+                // AudioFileReader delivers IEEE float samples at the file's own
+                // rate; previous code misread them as 16-bit PCM (pure noise).
                 using var reader = new AudioFileReader(path);
-                var samples = new System.Collections.Generic.List<float>();
-                byte[] buffer = new byte[8192];
-                int read;
-                while ((read = reader.Read(buffer, 0, buffer.Length)) > 0)
-                {
-                    for (int i = 0; i < read - 1; i += 2)
-                    {
-                        short val = BitConverter.ToInt16(buffer, i);
-                        samples.Add(val / 32768.0f);
-                    }
-                }
-                return samples.ToArray();
+                reader.Volume = 1.0f;
+
+                var target = new RamaverseStudio.Audio.WaveTo48kStereoFloat(reader);
+                return target.ReadAllSamples();
             }
             catch
             {
@@ -163,12 +183,14 @@ namespace RamaverseStudio.Audio
                         double t = (double)i / SampleRate;
                         // Low sawtooth wave
                         float s = (float)((t * 120.0 % 1.0) * 2.0 - 1.0) * 0.4f;
+                        float env = (float)(1.0 - t / 0.5);
+                        s *= env;
                         samples[i * 2] = s;
                         samples[i * 2 + 1] = s;
                     }
                     return samples;
 
-                default: // GG Horn
+                case SoundEffectType.GGHorn:
                     durationSamples = (int)(SampleRate * 0.8);
                     samples = new float[durationSamples * Channels];
                     for (int i = 0; i < durationSamples; i++)
@@ -181,7 +203,44 @@ namespace RamaverseStudio.Audio
                         samples[i * 2 + 1] = s;
                     }
                     return samples;
+
+                case SoundEffectType.Applause:
+                    durationSamples = (int)(SampleRate * 1.8);
+                    samples = new float[durationSamples * Channels];
+                    var applauseRandom = new Random(20260830);
+                    float[] claps = new float[durationSamples];
+                    // Random transient claps (Poisson-ish) + crowd noise bed
+                    for (int i = 0; i < durationSamples; i++)
+                    {
+                        double t = (double)i / SampleRate;
+                        claps[i] = 0;
+                    }
+                    int nextClap = 0;
+                    while (nextClap < durationSamples)
+                    {
+                        float amp = 0.25f + (float)applauseRandom.NextDouble() * 0.45f;
+                        int decay = (int)(SampleRate * 0.035);
+                        for (int k = 0; k < decay && nextClap + k < durationSamples; k++)
+                        {
+                            claps[nextClap + k] += amp * (float)(applauseRandom.NextDouble() * 2 - 1) * (float)Math.Exp(-k / (decay * 0.3));
+                        }
+                        nextClap += (int)(SampleRate * (0.004 + applauseRandom.NextDouble() * 0.012));
+                    }
+                    for (int i = 0; i < durationSamples; i++)
+                    {
+                        double t = (double)i / SampleRate;
+                        float crowd = (float)(applauseRandom.NextDouble() * 2 - 1) * 0.04f;
+                        float env = (float)(Math.Min(1.0, t * 8.0) * Math.Max(0.0, 1.0 - t * 0.45));
+                        float s = Math.Clamp(claps[i] + crowd, -1f, 1f) * env;
+                        samples[i * 2] = s;
+                        samples[i * 2 + 1] = s;
+                    }
+                    return samples;
             }
+
+            // Unreachable in practice (all SoundEffectType values handled above),
+            // but keeps the compiler satisfied if the enum grows.
+            return GenerateProceduralSound(SoundEffectType.GGHorn);
         }
 
         public void Dispose()

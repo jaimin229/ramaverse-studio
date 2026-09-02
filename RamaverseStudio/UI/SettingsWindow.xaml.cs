@@ -25,6 +25,22 @@ namespace RamaverseStudio.UI
 
         private void LoadSettingsToUI()
         {
+            // Language picker
+            ComboLanguage.Items.Clear();
+            foreach (var (code, name) in Services.LocalizationService.SupportedLanguages)
+            {
+                var item = new ComboBoxItem { Content = name, Tag = code };
+                ComboLanguage.Items.Add(item);
+                if (code == _profile.InterfaceLanguage)
+                {
+                    ComboLanguage.SelectedItem = item;
+                }
+            }
+            if (ComboLanguage.SelectedItem == null && ComboLanguage.Items.Count > 0)
+            {
+                ComboLanguage.SelectedIndex = 0;
+            }
+
             // Canvas format
             ComboCanvasFormat.SelectedIndex = _profile.CanvasFormat switch
             {
@@ -77,9 +93,11 @@ namespace RamaverseStudio.UI
                 _ => 2
             };
 
+            ChkLosslessRecording.IsChecked = _profile.LosslessRecording;
+            ChkMultiTrackAudio.IsChecked = _profile.MultiTrackAudioRecording;
+
             // Primary Streaming
             TxtRtmpUrl.Text = string.IsNullOrWhiteSpace(_profile.RtmpServerUrl) ? "rtmp://a.rtmp.youtube.com/live2" : _profile.RtmpServerUrl;
-            TxtStreamKey.Text = _profile.StreamKey;
             if (_profile.StreamPlatform.Contains("YouTube")) ComboStreamPlatform.SelectedIndex = 0;
             else if (_profile.StreamPlatform.Contains("Twitch")) ComboStreamPlatform.SelectedIndex = 1;
             else if (_profile.StreamPlatform.Contains("Kick")) ComboStreamPlatform.SelectedIndex = 2;
@@ -107,16 +125,20 @@ namespace RamaverseStudio.UI
 
             ComboSecLayoutMode.SelectedIndex = _profile.SecondaryLayoutMode == "LetterboxPad" ? 1 : 0;
 
-            // Audio Devices
+            // Audio Devices — preserve the persisted selection when present
             var mics = AudioEngine.GetMicrophoneDevices();
             ComboMicDevices.Items.Clear();
             foreach (var m in mics) ComboMicDevices.Items.Add(m);
-            if (ComboMicDevices.Items.Count > 0) ComboMicDevices.SelectedIndex = 0;
+
+            int micIdx = mics.IndexOf(_profile.SelectedMicDevice);
+            ComboMicDevices.SelectedIndex = micIdx >= 0 ? micIdx : 0;
 
             var outs = AudioEngine.GetOutputDevices();
             ComboOutputDevices.Items.Clear();
             foreach (var o in outs) ComboOutputDevices.Items.Add(o);
-            if (ComboOutputDevices.Items.Count > 0) ComboOutputDevices.SelectedIndex = 0;
+
+            int outIdx = outs.IndexOf(_profile.SelectedAudioOutputDevice);
+            ComboOutputDevices.SelectedIndex = outIdx >= 0 ? outIdx : 0;
         }
 
         private void OnDualStreamToggled(object sender, RoutedEventArgs e)
@@ -179,8 +201,24 @@ namespace RamaverseStudio.UI
         private void OnToggleKeyMaskClicked(object sender, RoutedEventArgs e)
         {
             _isKeyRevealed = !_isKeyRevealed;
-            BtnToggleKeyMask.Content = _isKeyRevealed ? "👁 Hide" : "👁 Show";
+
+            if (_isKeyRevealed)
+            {
+                TxtStreamKey.Text = _profile.StreamKey;
+                BtnToggleKeyMask.Content = "Hide";
+            }
+            else
+            {
+                if (!string.IsNullOrWhiteSpace(TxtStreamKey.Text) && !IsMasked(TxtStreamKey.Text))
+                {
+                    _profile.StreamKey = TxtStreamKey.Text.Trim();
+                }
+                TxtStreamKey.Text = new string('•', Math.Min(_profile.StreamKey.Length, 24));
+                BtnToggleKeyMask.Content = "Show";
+            }
         }
+
+        private static bool IsMasked(string text) => text.Contains('•');
 
         private void OnOpenYouTubeDashboardClicked(object sender, RoutedEventArgs e)
         {
@@ -215,6 +253,12 @@ namespace RamaverseStudio.UI
 
         private void OnSaveClicked(object sender, RoutedEventArgs e)
         {
+            // Language (applied immediately on save)
+            if (ComboLanguage.SelectedItem is ComboBoxItem langItem && langItem.Tag is string langCode)
+            {
+                _profile.InterfaceLanguage = langCode;
+            }
+
             // Canvas & Video
             switch (ComboCanvasFormat.SelectedIndex)
             {
@@ -285,10 +329,15 @@ namespace RamaverseStudio.UI
                 _ => 12000
             };
 
-            // Primary Streaming
+            _profile.LosslessRecording = ChkLosslessRecording.IsChecked == true;
+            _profile.MultiTrackAudioRecording = ChkMultiTrackAudio.IsChecked == true;
+
+            // Primary Streaming — use the real key, never the mask glyphs
             _profile.StreamPlatform = ((ComboBoxItem)ComboStreamPlatform.SelectedItem).Content.ToString() ?? "";
             _profile.RtmpServerUrl = TxtRtmpUrl.Text.Trim();
-            _profile.StreamKey = TxtStreamKey.Text.Trim();
+
+            string keyText = TxtStreamKey.Text;
+            _profile.StreamKey = IsMasked(keyText) ? _profile.StreamKey : keyText.Trim();
             _profile.StreamBitrateKbps = ComboStreamBitrate.SelectedIndex switch
             {
                 0 => 8000,
@@ -297,6 +346,16 @@ namespace RamaverseStudio.UI
                 3 => 3000,
                 _ => 6000
             };
+
+            // Audio devices
+            if (ComboMicDevices.SelectedItem is string micName)
+            {
+                _profile.SelectedMicDevice = micName;
+            }
+            if (ComboOutputDevices.SelectedItem is string outName)
+            {
+                _profile.SelectedAudioOutputDevice = outName;
+            }
 
             // Dual Streaming (Vertical)
             _profile.DualStreamingEnabled = ChkDualStreaming.IsChecked == true;
@@ -308,7 +367,6 @@ namespace RamaverseStudio.UI
             DialogResult = true;
             Close();
         }
-
         private async void OnCheckUpdatesNowClicked(object sender, RoutedEventArgs e)
         {
             var updateManager = new AutoUpdate.UpdateManager();

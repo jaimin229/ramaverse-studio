@@ -112,6 +112,7 @@ namespace RamaverseStudio.UI
 
             PanelDisplayCapture.Visibility = Visibility.Collapsed;
             PanelWindowCapture.Visibility = Visibility.Collapsed;
+            PanelBrowserSource.Visibility = Visibility.Collapsed;
             PanelCameraCapture.Visibility = Visibility.Collapsed;
             PanelPhoneCamera.Visibility = Visibility.Collapsed;
             PanelMediaFile.Visibility = Visibility.Collapsed;
@@ -128,6 +129,10 @@ namespace RamaverseStudio.UI
                 case "WindowCapture":
                     PanelWindowCapture.Visibility = Visibility.Visible;
                     TxtSourceName.Text = "Window Capture";
+                    break;
+                case "BrowserSource":
+                    PanelBrowserSource.Visibility = Visibility.Visible;
+                    TxtSourceName.Text = "Browser Overlay";
                     break;
                 case "VideoCaptureDevice":
                     PanelCameraCapture.Visibility = Visibility.Visible;
@@ -176,6 +181,26 @@ namespace RamaverseStudio.UI
             if (dlg.ShowDialog() == true)
             {
                 TxtFilePath.Text = dlg.FileName;
+                // Suggest a friendly default name from the file
+                try
+                {
+                    string stem = System.IO.Path.GetFileNameWithoutExtension(dlg.FileName);
+                    if (!string.IsNullOrWhiteSpace(stem) &&
+                        (string.IsNullOrWhiteSpace(TxtSourceName.Text) ||
+                         TxtSourceName.Text == "Image Overlay" ||
+                         TxtSourceName.Text == "Media Video File" ||
+                         TxtSourceName.Text == "Display Capture" ||
+                         TxtSourceName.Text == "Window Capture" ||
+                         TxtSourceName.Text == "Webcam / Camera" ||
+                         TxtSourceName.Text == "Phone Camera Stream" ||
+                         TxtSourceName.Text == "Text Overlay" ||
+                         TxtSourceName.Text == "Solid Background" ||
+                         TxtSourceName.Text == "Audio Spectrum Visualizer"))
+                    {
+                        TxtSourceName.Text = stem;
+                    }
+                }
+                catch { }
             }
         }
 
@@ -183,6 +208,13 @@ namespace RamaverseStudio.UI
         {
             if (SourceTypeListBox.SelectedItem is not ListBoxItem selectedItem) return;
             string tag = selectedItem.Tag?.ToString() ?? "DisplayCapture";
+
+            // Validate file-based sources before creating a dead layer
+            if ((tag == "ImageOverlay" || tag == "MediaFile") && string.IsNullOrWhiteSpace(TxtFilePath.Text))
+            {
+                MessageBox.Show(this, "Please pick a file first using the Browse... button.", "File Required", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
 
             var src = new SourceItem
             {
@@ -209,6 +241,17 @@ namespace RamaverseStudio.UI
                         src.Width = Math.Max(320, win.Bounds.Width);
                         src.Height = Math.Max(240, win.Bounds.Height);
                     }
+                    break;
+
+                case "BrowserSource":
+                    src.Type = SourceType.BrowserSource;
+                    src.BrowserUrl = string.IsNullOrWhiteSpace(TxtBrowserUrl.Text) ? "https://streamlabs.com" : TxtBrowserUrl.Text.Trim();
+                    if (int.TryParse(TxtBrowserWidth.Text, out int bw)) src.BrowserWidth = bw;
+                    if (int.TryParse(TxtBrowserHeight.Text, out int bh)) src.BrowserHeight = bh;
+                    src.Width = src.BrowserWidth;
+                    src.Height = src.BrowserHeight;
+                    src.CustomCss = TxtCustomCss.Text;
+                    src.RefreshOnSceneActive = ChkBrowserRefreshOnScene.IsChecked == true;
                     break;
 
                 case "VideoCaptureDevice":

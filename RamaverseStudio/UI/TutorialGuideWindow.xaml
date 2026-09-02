@@ -1,0 +1,368 @@
+<Window x:Class="RamaverseStudio.UI.TutorialGuideWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="RAMAVERSE STUDIO • Complete Streamer &amp; Creator Masterclass Guide"
+        Height="720" Width="1020"
+        WindowStartupLocation="CenterOwner"
+        Background="#0A0A0C"
+        Foreground="#FAFAFA"
+        FontFamily="Segoe UI, Roboto, -apple-system, sans-serif"
+        WindowStyle="SingleBorderWindow">
+
+    <Window.Resources>
+        <SolidColorBrush x:Key="PanelBg" Color="#121216"/>
+        <SolidColorBrush x:Key="BorderDark" Color="#222228"/>
+        <SolidColorBrush x:Key="AccentBlue" Color="#3B82F6"/>
+        <SolidColorBrush x:Key="TextMuted" Color="#8E8E98"/>
+
+        <Style x:Key="NavTabButton" TargetType="RadioButton">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="#A0A0AA"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Padding" Value="14,10"/>
+            <Setter Property="Margin" Value="0,2"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Border x:Name="TabBorder" Background="{TemplateBinding Background}" CornerRadius="6" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="TabBorder" Property="Background" Value="#22222C"/>
+                                <Setter Property="Foreground" Value="#FFFFFF"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="TabBorder" Property="Background" Value="#1A1A22"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="CardBorder" TargetType="Border">
+            <Setter Property="Background" Value="#15151B"/>
+            <Setter Property="BorderBrush" Value="#252530"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="16"/>
+            <Setter Property="Margin" Value="0,0,0,14"/>
+        </Style>
+
+        <Style x:Key="StepBadge" TargetType="Border">
+            <Setter Property="Background" Value="#3B82F622"/>
+            <Setter Property="BorderBrush" Value="#3B82F666"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="Padding" Value="6,2"/>
+            <Setter Property="Margin" Value="0,0,8,0"/>
+        </Style>
+
+        <Style x:Key="KeyBadge" TargetType="Border">
+            <Setter Property="Background" Value="#27272F"/>
+            <Setter Property="BorderBrush" Value="#3F3F4C"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="Padding" Value="8,4"/>
+            <Setter Property="Margin" Value="0,0,6,0"/>
+        </Style>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="230"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- LEFT SIDEBAR: TOPIC NAVIGATION -->
+        <Border Grid.Column="0" Background="{StaticResource PanelBg}" BorderBrush="{StaticResource BorderDark}" BorderThickness="0,0,1,0" Padding="14,16">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!-- Header Logo -->
+                <StackPanel Grid.Row="0" Margin="0,0,0,18">
+                    <TextBlock Text="RAMAVERSE STUDIO" FontWeight="Black" FontSize="14" Foreground="#FFFFFF"/>
+                    <TextBlock Text="STREAMER MASTERCLASS" FontSize="10" FontWeight="Bold" Foreground="#3B82F6" Margin="0,2,0,0"/>
+                </StackPanel>
+
+                <!-- Navigation RadioButtons -->
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+                        <RadioButton Content="🚀 1. Quick Start (60s)" Style="{StaticResource NavTabButton}" IsChecked="True" Checked="OnTabSelected" Tag="QuickStart"/>
+                        <RadioButton Content="🎮 2. Game &amp; Screen Capture" Style="{StaticResource NavTabButton}" Checked="OnTabSelected" Tag="Capture"/>
+                        <RadioButton Content="🎤 3. Pro Audio &amp; Voice FX" Style="{StaticResource NavTabButton}" Checked="OnTabSelected" Tag="Audio"/>
+                        <RadioButton Content="🎛️ 4. Studio Mode &amp; Switcher" Style="{StaticResource NavTabButton}" Checked="OnTabSelected" Tag="StudioMode"/>
+                        <RadioButton Content="📱 5. Mobile Remote Deck" Style="{StaticResource NavTabButton}" Checked="OnTabSelected" Tag="Remote"/>
+                        <RadioButton Content="⚡ 6. Instant Replay &amp; AI Clip" Style="{StaticResource NavTabButton}" Checked="OnTabSelected" Tag="Replay"/>
+                        <RadioButton Content="📦 7. Scene Backup (.rama)" Style="{StaticResource NavTabButton}" Checked="OnTabSelected" Tag="Exporter"/>
+                        <RadioButton Content="🌐 8. Web Sources &amp; Chat" Style="{StaticResource NavTabButton}" Checked="OnTabSelected" Tag="WebChat"/>
+                        <RadioButton Content="⌨️ 9. Hotkeys Cheat Sheet" Style="{StaticResource NavTabButton}" Checked="OnTabSelected" Tag="Hotkeys"/>
+                    </StackPanel>
+                </ScrollViewer>
+
+                <!-- Close Button -->
+                <Button Grid.Row="2" Content="Got it / Close Guide" Padding="12,8" Background="#24242E" BorderBrush="#444454" Foreground="#FFFFFF" FontWeight="Bold" Margin="0,12,0,0" Click="OnCloseClicked"/>
+            </Grid>
+        </Border>
+
+        <!-- RIGHT MAIN AREA: TUTORIAL CONTENT PAGES -->
+        <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto" Padding="28,22">
+            <StackPanel x:Name="ContentHostPanel">
+
+                <!-- 1. QUICK START GUIDE -->
+                <StackPanel x:Name="PageQuickStart">
+                    <TextBlock Text="🚀 Quick Start: From Zero to Live in 60 Seconds" FontSize="20" FontWeight="Bold" Margin="0,0,0,6"/>
+                    <TextBlock Text="Follow these 3 easy steps to broadcast or record your high-quality stream immediately." FontSize="13" Foreground="{StaticResource TextMuted}" Margin="0,0,0,20"/>
+
+                    <Border Style="{StaticResource CardBorder}">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                <Border Style="{StaticResource StepBadge}"><TextBlock Text="STEP 1" FontWeight="Bold" FontSize="11" Foreground="#60A5FA"/></Border>
+                                <TextBlock Text="Add Your Screen &amp; Camera Sources" FontSize="15" FontWeight="Bold"/>
+                            </StackPanel>
+                            <TextBlock Text="• In the bottom-left Sources list, click '+ Add Source'." TextWrapping="Wrap" LineHeight="20" Margin="0,0,0,4"/>
+                            <TextBlock Text="• Choose '🖥️ Screen Capture' for entire monitor, or '🎮 Game Capture' for exclusive fullscreen games." TextWrapping="Wrap" LineHeight="20" Margin="0,0,0,4"/>
+                            <TextBlock Text="• Add '📹 Camera' and select your webcam or USB capture card. Drag the corner handles on the canvas to resize and position your facecam." TextWrapping="Wrap" LineHeight="20"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource CardBorder}">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                <Border Style="{StaticResource StepBadge}"><TextBlock Text="STEP 2" FontWeight="Bold" FontSize="11" Foreground="#60A5FA"/></Border>
+                                <TextBlock Text="Set Up Studio Audio &amp; AI Noise Gate" FontSize="15" FontWeight="Bold"/>
+                            </StackPanel>
+                            <TextBlock Text="• Click the '⚙️ Settings' button in the top bar." TextWrapping="Wrap" LineHeight="20" Margin="0,0,0,4"/>
+                            <TextBlock Text="• Under 'Microphone', choose your mic (e.g. HyperX, Rode, Elgato, Realtek)." TextWrapping="Wrap" LineHeight="20" Margin="0,0,0,4"/>
+                            <TextBlock Text="• In the right Properties panel, check 'Noise Gate' and 'Compressor' so keyboard clicks, fan hum, and background room noises are automatically eliminated!" TextWrapping="Wrap" LineHeight="20"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource CardBorder}">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                <Border Style="{StaticResource StepBadge}"><TextBlock Text="STEP 3" FontWeight="Bold" FontSize="11" Foreground="#60A5FA"/></Border>
+                                <TextBlock Text="Start Streaming or Recording" FontSize="15" FontWeight="Bold"/>
+                            </StackPanel>
+                            <TextBlock Text="• Hit '● RECORD' (or Ctrl+R) to record crash-proof 1080p 60FPS MP4 videos." TextWrapping="Wrap" LineHeight="20" Margin="0,0,0,4"/>
+                            <TextBlock Text="• Hit '📡 GO LIVE' (or Ctrl+L) to stream to YouTube, Twitch, Kick, or TikTok." TextWrapping="Wrap" LineHeight="20"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- 2. GAME & SCREEN CAPTURE -->
+                <StackPanel x:Name="PageCapture" Visibility="Collapsed">
+                    <TextBlock Text="🎮 Ultra-Low-Latency Game &amp; Screen Capture" FontSize="20" FontWeight="Bold" Margin="0,0,0,6"/>
+                    <TextBlock Text="Master fullscreen gaming, multi-monitor setups, and vertical formats." FontSize="13" Foreground="{StaticResource TextMuted}" Margin="0,0,0,20"/>
+
+                    <Border Style="{StaticResource CardBorder}">
+                        <StackPanel>
+                            <TextBlock Text="Hardware-Accelerated Windows Graphics Capture (WGC)" FontSize="15" FontWeight="Bold" Margin="0,0,0,8"/>
+                            <TextBlock Text="Ramaverse uses direct DWM GPU memory surface sharing. This eliminates lag in heavy FPS games like Valorant, CS2, GTA V, and Fortnite without dropping stream frames." TextWrapping="Wrap" LineHeight="20" Margin="0,0,0,10"/>
+                            <TextBlock Text="💡 Pro-Tip: If a game is running in exclusive fullscreen, use 'Game Capture' or borderless windowed mode for smooth 60/120 FPS capture." Foreground="#38BDF8" TextWrapping="Wrap" LineHeight="20"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource CardBorder}">
+                        <StackPanel>
+                            <TextBlock Text="Aspect Ratios: 16:9 Landscape vs 9:16 Vertical (Shorts/TikTok)" FontSize="15" FontWeight="Bold" Margin="0,0,0,8"/>
+                            <TextBlock Text="Click the format buttons (16:9, 9:16, 4:3, 1:1) in the bottom control bar to switch your canvas instantly. 9:16 mode (1080x1920) is perfect for streaming directly to TikTok Live or recording YouTube Shorts." TextWrapping="Wrap" LineHeight="20"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- 3. PRO AUDIO & VOICE CHANGER -->
+                <StackPanel x:Name="PageAudio" Visibility="Collapsed">
+                    <TextBlock Text="🎤 Broadcast Studio Audio &amp; Voice DSP Engine" FontSize="20" FontWeight="Bold" Margin="0,0,0,6"/>
+                    <TextBlock Text="Transform your voice with studio hardware-grade dynamic filters and hilarious soundboard effects." FontSize="13" Foreground="{StaticResource TextMuted}" Margin="0,0,0,20"/>
+
+                    <Border Style="{StaticResource CardBorder}">
+                        <StackPanel>
+                            <TextBlock Text="Built-in 5-Stage Audio DSP Processing Rack" FontSize="15" FontWeight="Bold" Margin="0,0,0,8"/>
+                            <TextBlock Text="1. Noise Gate: Closes completely during pauses so keyboard clatter stays silent." TextWrapping="Wrap" LineHeight="20" Margin="0,0,0,4"/>
+                            <TextBlock Text="2. 3-Band Studio EQ: Boosts warm radio bass and crisp vocal presence." TextWrapping="Wrap" LineHeight="20" Margin="0,0,0,4"/>
+                            <TextBlock Text="3. Dynamic Compressor: Keeps shouting and quiet whispers at consistent volumes." TextWrapping="Wrap" LineHeight="20" Margin="0,0,0,4"/>
+                            <TextBlock Text="4. Peak Limiter: Zero clipping/distortion even during intense hype screams." TextWrapping="Wrap" LineHeight="20" Margin="0,0,0,4"/>
+                            <TextBlock Text="5. Auto-Ducking: When you speak, game audio/music automatically dips by 12dB so viewers hear you loud and clear!" TextWrapping="Wrap" LineHeight="20"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource CardBorder}">
+                        <StackPanel>
+                            <TextBlock Text="Instant Voice Changer Presets" FontSize="15" FontWeight="Bold" Margin="0,0,0,8"/>
+                            <TextBlock Text="Enable Voice Changer in the audio inspector to sound like: 🤖 Robot, 🗿 Deep Voice, ✨ High/Anime, 📢 Megaphone, or 👹 Demon." TextWrapping="Wrap" LineHeight="20"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource CardBorder}">
+                        <StackPanel>
+                            <TextBlock Text="Headphone Live Monitoring" FontSize="15" FontWeight="Bold" Margin="0,0,0,8"/>
+                            <TextBlock Text="Enable 'Headphone Monitor' in Settings to hear your live processed microphone and voice changer effects directly in your headset with zero latency." TextWrapping="Wrap" LineHeight="20"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- 4. STUDIO MODE & SWITCHER -->
+                <StackPanel x:Name="PageStudioMode" Visibility="Collapsed">
+                    <TextBlock Text="🎛️ Studio Mode: Professional Dual-Canvas Broadcasting" FontSize="20" FontWeight="Bold" Margin="0,0,0,6"/>
+                    <TextBlock Text="Stage and edit scenes privately before showing them to your live audience." FontSize="13" Foreground="{StaticResource TextMuted}" Margin="0,0,0,20"/>
+
+                    <Border Style="{StaticResource CardBorder}">
+                        <StackPanel>
+                            <TextBlock Text="How Studio Mode Works" FontSize="15" FontWeight="Bold" Margin="0,0,0,8"/>
+                            <TextBlock Text="• Click the '🎛️ STUDIO MODE' button in the top toolbar to split the viewport." TextWrapping="Wrap" LineHeight="20" Margin="0,0,0,4"/>
+                            <TextBlock Text="• Left Canvas (Preview): Select any scene to edit, resize webcams, or add graphics privately without the audience seeing." TextWrapping="Wrap" LineHeight="20" Margin="0,0,0,4"/>
+                            <TextBlock Text="• Right Canvas (Program): Shows what is actively broadcasting or recording." TextWrapping="Wrap" LineHeight="20" Margin="0,0,0,4"/>
+                            <TextBlock Text="• Center 'TRANSITION ➔' Button: Smoothly animates the staged scene to Program with smooth CrossFade, Slide, or Wipe!" TextWrapping="Wrap" LineHeight="20"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource CardBorder}">
+                        <StackPanel>
+                            <TextBlock Text="Fullscreen Projector" FontSize="15" FontWeight="Bold" Margin="0,0,0,8"/>
+                            <TextBlock Text="Click 'Projector' in the top right of the canvas to pop out a borderless fullscreen live feed on a second monitor or TV (Press ESC to close)." TextWrapping="Wrap" LineHeight="20"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- 5. MOBILE REMOTE CONTROLLER -->
+                <StackPanel x:Name="PageRemote" Visibility="Collapsed">
+                    <TextBlock Text="📱 Mobile Touch Deck &amp; Remote Control" FontSize="20" FontWeight="Bold" Margin="0,0,0,6"/>
+                    <TextBlock Text="Turn any iPhone, Android phone, iPad, or tablet into a physical Stream Deck." FontSize="13" Foreground="{StaticResource TextMuted}" Margin="0,0,0,20"/>
+
+                    <Border Style="{StaticResource CardBorder}">
+                        <StackPanel>
+                            <TextBlock Text="Instant Setup (No App Install Required)" FontSize="15" FontWeight="Bold" Margin="0,0,0,8"/>
+                            <TextBlock Text="1. Make sure your phone is connected to the same Wi-Fi network as your PC." TextWrapping="Wrap" LineHeight="20" Margin="0,0,0,4"/>
+                            <TextBlock Text="2. Click the '📱 REMOTE' button in the top toolbar. It will copy your local LAN URL (e.g. http://192.168.1.50:4455)." TextWrapping="Wrap" LineHeight="20" Margin="0,0,0,4"/>
+                            <TextBlock Text="3. Open that URL in Safari or Chrome on your phone." TextWrapping="Wrap" LineHeight="20" Margin="0,0,0,10"/>
+                            <TextBlock Text="✨ You can now tap buttons on your phone to switch scenes, toggle recording/streaming, mute your mic, trigger instant replays, and play soundboard sound effects!" TextWrapping="Wrap" LineHeight="20"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- 6. INSTANT REPLAY & AI AUTO-CLIPPER -->
+                <StackPanel x:Name="PageReplay" Visibility="Collapsed">
+                    <TextBlock Text="⚡ Instant Replay, AI Auto-Clipper &amp; YouTube Chapters" FontSize="20" FontWeight="Bold" Margin="0,0,0,6"/>
+                    <TextBlock Text="Never miss a clutch moment or hilarious fail again." FontSize="13" Foreground="{StaticResource TextMuted}" Margin="0,0,0,20"/>
+
+                    <Border Style="{StaticResource CardBorder}">
+                        <StackPanel>
+                            <TextBlock Text="30-Second Instant Replay Clip" FontSize="15" FontWeight="Bold" Margin="0,0,0,8"/>
+                            <TextBlock Text="Whenever something crazy happens on stream, press Ctrl+Shift+F10 or click '⚡ CLIP (30s)' in the top bar. Ramaverse will immediately export the last 30 seconds of high-FPS video into your recordings folder without interrupting your broadcast!" TextWrapping="Wrap" LineHeight="20"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource CardBorder}">
+                        <StackPanel>
+                            <TextBlock Text="AI Audio Auto-Clipper" FontSize="15" FontWeight="Bold" Margin="0,0,0,8"/>
+                            <TextBlock Text="Check 'AI Auto-Clipper' in the bottom soundboard drawer. When you scream or shout during a clutch win, the engine detects peak excitation and automatically saves a 9:16 vertical TikTok/Shorts replay clip!" TextWrapping="Wrap" LineHeight="20"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource CardBorder}">
+                        <StackPanel>
+                            <TextBlock Text="Automatic YouTube Chapter Markers" FontSize="15" FontWeight="Bold" Margin="0,0,0,8"/>
+                            <TextBlock Text="Whenever you switch scenes or press Ctrl+M, a chapter timestamp is logged. When recording finishes, a YouTube-ready chapters text file is exported alongside your MP4 for instant copy-pasting into video descriptions!" TextWrapping="Wrap" LineHeight="20"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- 7. SCENE BACKUP & SHARING (.rama) -->
+                <StackPanel x:Name="PageExporter" Visibility="Collapsed">
+                    <TextBlock Text="📦 Portable Scene Collection Archiver (.rama)" FontSize="20" FontWeight="Bold" Margin="0,0,0,6"/>
+                    <TextBlock Text="Backup your complete studio layout and share it with other creators." FontSize="13" Foreground="{StaticResource TextMuted}" Margin="0,0,0,20"/>
+
+                    <Border Style="{StaticResource CardBorder}">
+                        <StackPanel>
+                            <TextBlock Text="1-Click Export &amp; Import" FontSize="15" FontWeight="Bold" Margin="0,0,0,8"/>
+                            <TextBlock Text="• In the Scenes toolbar, click '📦' (Export Collection) to save a single .rama file containing all scenes, sources, audio filters, and bundled PNG/media files." TextWrapping="Wrap" LineHeight="20" Margin="0,0,0,4"/>
+                            <TextBlock Text="• Click '📂' (Import Collection) on any other computer to instantly unpack and load your entire stream setup!" TextWrapping="Wrap" LineHeight="20"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- 8. WEB SOURCES & LIVE CHAT -->
+                <StackPanel x:Name="PageWebChat" Visibility="Collapsed">
+                    <TextBlock Text="🌐 Browser Overlays &amp; Multi-Platform Chat" FontSize="20" FontWeight="Bold" Margin="0,0,0,6"/>
+                    <TextBlock Text="Integrate StreamElements/Streamlabs alerts and unified chat." FontSize="13" Foreground="{StaticResource TextMuted}" Margin="0,0,0,20"/>
+
+                    <Border Style="{StaticResource CardBorder}">
+                        <StackPanel>
+                            <TextBlock Text="Offscreen Chromium Browser Source (WebView2)" FontSize="15" FontWeight="Bold" Margin="0,0,0,8"/>
+                            <TextBlock Text="Add '🌐 Browser Source' to render animated alerts, donation goals, chat widgets, and HTML5 overlays with transparent alpha transparency directly on your stream canvas." TextWrapping="Wrap" LineHeight="20"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource CardBorder}">
+                        <StackPanel>
+                            <TextBlock Text="Unified Twitch / YouTube / Kick Chat Aggregator" FontSize="15" FontWeight="Bold" Margin="0,0,0,8"/>
+                            <TextBlock Text="In the right panel, switch to '💬 CHAT &amp; ALERTS'. Paste your Twitch channel name or YouTube live video link to read all viewer messages in one unified stream deck with colorful platform badges!" TextWrapping="Wrap" LineHeight="20"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- 9. HOTKEYS CHEAT SHEET -->
+                <StackPanel x:Name="PageHotkeys" Visibility="Collapsed">
+                    <TextBlock Text="⌨️ Streamer Hotkeys Reference Cheat Sheet" FontSize="20" FontWeight="Bold" Margin="0,0,0,6"/>
+                    <TextBlock Text="Master these global keyboard shortcuts to control your broadcast like a pro." FontSize="13" Foreground="{StaticResource TextMuted}" Margin="0,0,0,20"/>
+
+                    <Border Style="{StaticResource CardBorder}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="220"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal" Margin="0,6"><Border Style="{StaticResource KeyBadge}"><TextBlock Text="Ctrl + R" FontWeight="Bold"/></Border></StackPanel>
+                            <TextBlock Grid.Row="0" Grid.Column="1" Text="Start / Stop MP4 Recording" VerticalAlignment="Center" Margin="0,6"/>
+
+                            <StackPanel Grid.Row="1" Grid.Column="0" Orientation="Horizontal" Margin="0,6"><Border Style="{StaticResource KeyBadge}"><TextBlock Text="Ctrl + L" FontWeight="Bold"/></Border></StackPanel>
+                            <TextBlock Grid.Row="1" Grid.Column="1" Text="Start / Stop Live Streaming" VerticalAlignment="Center" Margin="0,6"/>
+
+                            <StackPanel Grid.Row="2" Grid.Column="0" Orientation="Horizontal" Margin="0,6"><Border Style="{StaticResource KeyBadge}"><TextBlock Text="Ctrl + S" FontWeight="Bold"/></Border></StackPanel>
+                            <TextBlock Grid.Row="2" Grid.Column="1" Text="Take Full-Resolution Studio Snapshot (PNG)" VerticalAlignment="Center" Margin="0,6"/>
+
+                            <StackPanel Grid.Row="3" Grid.Column="0" Orientation="Horizontal" Margin="0,6"><Border Style="{StaticResource KeyBadge}"><TextBlock Text="Ctrl + Shift + F10" FontWeight="Bold"/></Border></StackPanel>
+                            <TextBlock Grid.Row="3" Grid.Column="1" Text="Save Instant 30-Second Replay Clip" VerticalAlignment="Center" Margin="0,6"/>
+
+                            <StackPanel Grid.Row="4" Grid.Column="0" Orientation="Horizontal" Margin="0,6"><Border Style="{StaticResource KeyBadge}"><TextBlock Text="Ctrl + M" FontWeight="Bold"/></Border></StackPanel>
+                            <TextBlock Grid.Row="4" Grid.Column="1" Text="Drop Manual YouTube Chapter Marker" VerticalAlignment="Center" Margin="0,6"/>
+
+                            <StackPanel Grid.Row="5" Grid.Column="0" Orientation="Horizontal" Margin="0,6"><Border Style="{StaticResource KeyBadge}"><TextBlock Text="Ctrl + 1 ... 5" FontWeight="Bold"/></Border></StackPanel>
+                            <TextBlock Grid.Row="5" Grid.Column="1" Text="Quick Switch Scenes 1 to 5" VerticalAlignment="Center" Margin="0,6"/>
+
+                            <StackPanel Grid.Row="6" Grid.Column="0" Orientation="Horizontal" Margin="0,6"><Border Style="{StaticResource KeyBadge}"><TextBlock Text="Ctrl + Z / Y" FontWeight="Bold"/></Border></StackPanel>
+                            <TextBlock Grid.Row="6" Grid.Column="1" Text="Undo / Redo Canvas Transform" VerticalAlignment="Center" Margin="0,6"/>
+
+                            <StackPanel Grid.Row="7" Grid.Column="0" Orientation="Horizontal" Margin="0,6"><Border Style="{StaticResource KeyBadge}"><TextBlock Text="Arrow Keys" FontWeight="Bold"/></Border></StackPanel>
+                            <TextBlock Grid.Row="7" Grid.Column="1" Text="Nudge Selected Layer (Hold Shift for 10px)" VerticalAlignment="Center" Margin="0,6"/>
+
+                            <StackPanel Grid.Row="8" Grid.Column="0" Orientation="Horizontal" Margin="0,6"><Border Style="{StaticResource KeyBadge}"><TextBlock Text="F1" FontWeight="Bold"/></Border></StackPanel>
+                            <TextBlock Grid.Row="8" Grid.Column="1" Text="Open This Masterclass Guide" VerticalAlignment="Center" Margin="0,6"/>
+                        </Grid>
+                    </Border>
+                </StackPanel>
+
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</Window>

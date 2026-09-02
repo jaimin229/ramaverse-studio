@@ -7,30 +7,42 @@ using System.Threading.Tasks;
 
 namespace RamaverseStudio.Video
 {
+    /// <summary>
+    /// Wireless phone camera receiver. Connects to an MJPEG HTTP stream
+    /// (DroidCam / IP Webcam / EpocCam) and keeps the latest decoded frame.
+    /// Uses ResponseHeadersRead with an infinite read timeout so slow phone
+    /// streams do not get killed between frames; reconnection only happens
+    /// when the transport itself breaks.
+    /// </summary>
     public class PhoneCameraReceiver : IDisposable
     {
         private HttpClient? _httpClient;
         private CancellationTokenSource? _cts;
         private readonly object _frameLock = new object();
         private Bitmap? _latestFrame;
-        private bool _isConnected = false;
+        private volatile bool _isConnected = false;
 
         public bool IsConnected => _isConnected;
         public string StreamUrl { get; set; } = "http://192.168.1.100:8080/video";
 
         public event Action<Bitmap>? FrameArrived;
+        public event Action<string>? ConnectionError;
 
         public async Task<bool> ConnectAsync(string streamUrl)
         {
             await DisconnectAsync();
 
             StreamUrl = streamUrl;
+
             _cts = new CancellationTokenSource();
-            _httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(10) };
+            _httpClient = new HttpClient
+            {
+                Timeout = Timeout.InfiniteTimeSpan // per-read timeout handled below
+            };
 
             try
             {
-                _ = Task.Run(() => StreamLoopAsync(_cts.Token), _cts.Token);
+                _ = Task.Run(() => StreamLoopAsync(_cts.Token));
                 _isConnected = true;
                 return true;
             }
@@ -50,6 +62,7 @@ namespace RamaverseStudio.Video
                     using var response = await _httpClient!.GetAsync(StreamUrl, HttpCompletionOption.ResponseHeadersRead, ct);
                     if (!response.IsSuccessStatusCode)
                     {
+                        ConnectionError?.Invoke($"Phone camera server returned {(int)response.StatusCode}. Check the URL and that the phone app is running.");
                         await Task.Delay(2000, ct);
                         continue;
                     }
@@ -87,21 +100,31 @@ namespace RamaverseStudio.Video
                         }
 
                         frameMs.Position = 0;
+                        Bitmap? decoded = null;
                         try
                         {
                             using var img = Image.FromStream(frameMs);
-                            var bmp = new Bitmap(img);
-
-                            lock (_frameLock)
-                            {
-                                _latestFrame?.Dispose();
-                                _latestFrame = (Bitmap)bmp.Clone();
-                            }
-
-                            FrameArrived?.Invoke(bmp);
+                            decoded = new Bitmap(img);
                         }
-                        catch { }
+                        catch
+                        {
+                            decoded?.Dispose();
+                            continue; // partial frame: skip, keep streaming
+                        }
+
+                        lock (_frameLock)
+                        {
+                            _latestFrame?.Dispose();
+                            _latestFrame = decoded;
+                        }
+
+                        FrameArrived?.Invoke(decoded);
+                        decoded = null; // FrameArrived receivers own this instance now
                     }
+                }
+                catch (OperationCanceledException)
+                {
+                    break;
                 }
                 catch (Exception)
                 {
@@ -121,11 +144,15 @@ namespace RamaverseStudio.Video
 
         public Task DisconnectAsync()
         {
-            _cts?.Cancel();
-            _cts?.Dispose();
+            try
+            {
+                _cts?.Cancel();
+                _cts?.Dispose();
+            }
+            catch { }
             _cts = null;
 
-            _httpClient?.Dispose();
+            try { _httpClient?.Dispose(); } catch { }
             _httpClient = null;
 
             lock (_frameLock)

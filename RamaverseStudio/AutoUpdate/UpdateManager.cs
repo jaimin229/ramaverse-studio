@@ -34,7 +34,7 @@ namespace RamaverseStudio.AutoUpdate
 
     public class UpdateManager
     {
-        public static readonly Version CurrentVersion = new Version(1, 0, 0);
+        public static readonly Version CurrentVersion = Assembly.GetExecutingAssembly().GetName().Version ?? new Version(1, 3, 0);
         public const string DefaultUpdateUrl = "https://raw.githubusercontent.com/jaimin229/ramaverse-studio/main/update_manifest.json";
 
         private readonly HttpClient _httpClient;
@@ -84,11 +84,19 @@ namespace RamaverseStudio.AutoUpdate
             return null;
         }
 
-        public static bool IsNewerVersion(string remoteVersionStr)
+        public static bool IsNewerVersion(string remoteVersionStr, Version? baseVersion = null)
         {
-            if (Version.TryParse(remoteVersionStr.TrimStart('v', 'V'), out var remoteVer))
+            if (string.IsNullOrWhiteSpace(remoteVersionStr)) return false;
+
+            // Accept "v"-prefixed tags ("v2.0.0") as well as bare versions.
+            string trimmed = remoteVersionStr.Trim().TrimStart('v', 'V');
+
+            if (Version.TryParse(trimmed, out var remoteVer))
             {
-                return remoteVer > CurrentVersion;
+                var cur = baseVersion ?? CurrentVersion;
+                var currentNorm = new Version(cur.Major, cur.Minor, Math.Max(0, cur.Build));
+                var remoteNorm = new Version(remoteVer.Major, remoteVer.Minor, Math.Max(0, remoteVer.Build));
+                return remoteNorm > currentNorm;
             }
             return false;
         }

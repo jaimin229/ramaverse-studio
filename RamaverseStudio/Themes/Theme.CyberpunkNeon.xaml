@@ -1,0 +1,41 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- Cyberpunk Neon Palette -->
+    <Color x:Key="Color.ChassisDeep">#08080C</Color>
+    <Color x:Key="Color.ChassisSurface">#0F1018</Color>
+    <Color x:Key="Color.ChassisCard">#161726</Color>
+    <Color x:Key="Color.ChassisCardHover">#202238</Color>
+    <Color x:Key="Color.Border">#00F2FE</Color>
+    <Color x:Key="Color.BorderSubtle">#1A2B3C</Color>
+
+    <Color x:Key="Color.Accent">#00F2FE</Color>
+    <Color x:Key="Color.AccentGlow">#EC4899</Color>
+    <Color x:Key="Color.AccentHover">#38BDF8</Color>
+
+    <Color x:Key="Color.TextPrimary">#FFFFFF</Color>
+    <Color x:Key="Color.TextSecondary">#94A3B8</Color>
+    <Color x:Key="Color.TextDim">#64748B</Color>
+
+    <Color x:Key="Color.Success">#10B981</Color>
+    <Color x:Key="Color.Danger">#F43F5E</Color>
+    <Color x:Key="Color.Warning">#FBBF24</Color>
+
+    <SolidColorBrush x:Key="Brush.ChassisDeep" Color="{StaticResource Color.ChassisDeep}" />
+    <SolidColorBrush x:Key="Brush.ChassisSurface" Color="{StaticResource Color.ChassisSurface}" />
+    <SolidColorBrush x:Key="Brush.ChassisCard" Color="{StaticResource Color.ChassisCard}" />
+    <SolidColorBrush x:Key="Brush.ChassisCardHover" Color="{StaticResource Color.ChassisCardHover}" />
+    <SolidColorBrush x:Key="Brush.Border" Color="{StaticResource Color.Border}" />
+    <SolidColorBrush x:Key="Brush.BorderSubtle" Color="{StaticResource Color.BorderSubtle}" />
+
+    <SolidColorBrush x:Key="Brush.Accent" Color="{StaticResource Color.Accent}" />
+    <SolidColorBrush x:Key="Brush.AccentGlow" Color="{StaticResource Color.AccentGlow}" />
+    <SolidColorBrush x:Key="Brush.AccentHover" Color="{StaticResource Color.AccentHover}" />
+
+    <SolidColorBrush x:Key="Brush.TextPrimary" Color="{StaticResource Color.TextPrimary}" />
+    <SolidColorBrush x:Key="Brush.TextSecondary" Color="{StaticResource Color.TextSecondary}" />
+    <SolidColorBrush x:Key="Brush.TextDim" Color="{StaticResource Color.TextDim}" />
+
+    <SolidColorBrush x:Key="Brush.Success" Color="{StaticResource Color.Success}" />
+    <SolidColorBrush x:Key="Brush.Danger" Color="{StaticResource Color.Danger}" />
+    <SolidColorBrush x:Key="Brush.Warning" Color="{StaticResource Color.Warning}" />
+</ResourceDictionary>

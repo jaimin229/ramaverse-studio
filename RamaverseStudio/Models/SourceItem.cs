@@ -16,6 +16,7 @@ namespace RamaverseStudio.Models
         TextOverlay,        // GDI+ Text
         ColorSource,        // Solid color
         AudioVisualizer,    // Live Audio Spectrum / Waveform Bars
+        BrowserSource,      // Live Web / Streamlabs / StreamElements Overlay
         AudioInputCapture,  // Mic
         AudioOutputCapture  // Desktop audio
     }
@@ -26,6 +27,14 @@ namespace RamaverseStudio.Models
         Vertical9x16,   // 1080x1920
         Square1x1,      // 1080x1080
         Custom
+    }
+
+    public enum LayerBlendMode
+    {
+        Normal,
+        Additive,
+        Screen,
+        Multiply
     }
 
     public class SourceItem : INotifyPropertyChanged
@@ -44,6 +53,7 @@ namespace RamaverseStudio.Models
         private double _height = 1080;
         private double _rotation = 0;
         private double _opacity = 1.0;
+        private LayerBlendMode _blendMode = LayerBlendMode.Normal;
         private int _zIndex = 0;
 
         // Crop properties
@@ -102,6 +112,34 @@ namespace RamaverseStudio.Models
         private Color _textOutlineColor = Colors.Black;
         private double _textOutlineThickness = 2.0;
 
+        // TimerOverlay (Countdown / Stopwatch / Clock text rendered live)
+        private TimerMode _timerMode = TimerMode.Disabled;
+        private DateTime _timerTargetUtc = DateTime.UtcNow.AddMinutes(5);
+        private DateTime _timerStartUtc = DateTime.UtcNow;
+
+        /// <summary>
+        /// Live timer rendering modes for a TextOverlay source. When enabled the
+        /// text content is regenerated every second with the live value.
+        /// </summary>
+        public enum TimerMode
+        {
+            Disabled,   // normal static text
+            Countdown,  // time until _timerTargetUtc
+            Stopwatch,  // time since _timerStartUtc
+            Clock       // wall clock (local time)
+        }
+
+        // BrowserSource (Streamlabs / Web Overlays / Widgets)
+        private string _browserUrl = "https://streamlabs.com/alert-box/v3/YOUR_TOKEN";
+        private int _browserWidth = 1920;
+        private int _browserHeight = 1080;
+        private string _customCss = "body { background-color: rgba(0, 0, 0, 0); margin: 0px auto; overflow: hidden; }";
+        private bool _shutdownWhenNotVisible = false;
+        private bool _refreshOnSceneActive = true;
+
+        // Hardware Game Capture (DirectX / WGC)
+        private bool _useHardwareCapture = true;
+
         // ColorSource
         private Color _solidColor = Color.FromRgb(15, 23, 42);
 
@@ -118,6 +156,7 @@ namespace RamaverseStudio.Models
         public double Height { get => _height; set => SetField(ref _height, Math.Max(10, value)); }
         public double Rotation { get => _rotation; set => SetField(ref _rotation, value); }
         public double Opacity { get => _opacity; set => SetField(ref _opacity, Math.Clamp(value, 0.0, 1.0)); }
+        public LayerBlendMode BlendMode { get => _blendMode; set => SetField(ref _blendMode, value); }
         public int ZIndex { get => _zIndex; set => SetField(ref _zIndex, value); }
 
         public double CropLeft { get => _cropLeft; set => SetField(ref _cropLeft, value); }
@@ -169,6 +208,19 @@ namespace RamaverseStudio.Models
         public double TextOutlineThickness { get => _textOutlineThickness; set => SetField(ref _textOutlineThickness, value); }
 
         public Color SolidColor { get => _solidColor; set => SetField(ref _solidColor, value); }
+
+        public string BrowserUrl { get => _browserUrl; set => SetField(ref _browserUrl, value); }
+        public int BrowserWidth { get => _browserWidth; set => SetField(ref _browserWidth, Math.Max(32, value)); }
+        public int BrowserHeight { get => _browserHeight; set => SetField(ref _browserHeight, Math.Max(32, value)); }
+        public string CustomCss { get => _customCss; set => SetField(ref _customCss, value); }
+        public bool ShutdownWhenNotVisible { get => _shutdownWhenNotVisible; set => SetField(ref _shutdownWhenNotVisible, value); }
+        public bool RefreshOnSceneActive { get => _refreshOnSceneActive; set => SetField(ref _refreshOnSceneActive, value); }
+
+        public bool UseHardwareCapture { get => _useHardwareCapture; set => SetField(ref _useHardwareCapture, value); }
+
+        public TimerMode SourceTimerMode { get => _timerMode; set => SetField(ref _timerMode, value); }
+        public DateTime TimerTargetUtc { get => _timerTargetUtc; set => SetField(ref _timerTargetUtc, value); }
+        public DateTime TimerStartUtc { get => _timerStartUtc; set => SetField(ref _timerStartUtc, value); }
 
         public event PropertyChangedEventHandler? PropertyChanged;
         protected void OnPropertyChanged([CallerMemberName] string? propertyName = null)

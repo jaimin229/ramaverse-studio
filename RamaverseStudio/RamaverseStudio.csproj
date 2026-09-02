@@ -8,13 +8,36 @@
     <UseWPF>true</UseWPF>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <ApplicationIcon></ApplicationIcon>
+    <AssemblyName>RamaverseStudio</AssemblyName>
+    <RootNamespace>RamaverseStudio</RootNamespace>
+    <Version>1.2.0.0</Version>
+    <FileVersion>1.2.0.0</FileVersion>
+    <InformationalVersion>1.2.0 Creator Pack</InformationalVersion>
+    <Product>Ramaverse Studio</Product>
+    <Company>Ramaverse</Company>
+    <Description>Native Windows creator studio: record, stream, and create — 100% C# .NET 10.</Description>
+    <Copyright>MIT License</Copyright>
+
+    <!-- Worldwide distribution: one self-contained .exe, no .NET install needed.
+         WPF's XAML gaps make trimmed publish unreliable, so we ship the runtime
+         in a single file without trimming (safe & compatible everywhere). -->
+    <PublishSingleFile Condition="'$(PublishWorldwide)' == 'true'">true</PublishSingleFile>
+    <SelfContained Condition="'$(PublishWorldwide)' == 'true'">true</SelfContained>
+    <RuntimeIdentifier Condition="'$(PublishWorldwide)' == 'true'">win-x64</RuntimeIdentifier>
+    <IncludeNativeLibrariesForSelfExtract Condition="'$(PublishWorldwide)' == 'true'">true</IncludeNativeLibrariesForSelfExtract>
+    <EnableCompressionInSingleFile Condition="'$(PublishWorldwide)' == 'true'">true</EnableCompressionInSingleFile>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="FlashCap" Version="1.12.0" />
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.3124.44" />
     <PackageReference Include="NAudio" Version="3.0.1" />
     <PackageReference Include="System.Drawing.Common" Version="10.0.11" />
     <PackageReference Include="System.Management" Version="10.0.11" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Assets\logo.png" />
   </ItemGroup>
 
 </Project>

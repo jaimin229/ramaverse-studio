@@ -4,15 +4,115 @@
              xmlns:local="clr-namespace:RamaverseStudio"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
-        <!-- Global Colors -->
-        <SolidColorBrush x:Key="AppBg" Color="#000000"/>
-        <SolidColorBrush x:Key="ControlDarkBg" Color="#141414"/>
-        <SolidColorBrush x:Key="ControlHoverBg" Color="#222222"/>
-        <SolidColorBrush x:Key="ControlSelectedBg" Color="#333333"/>
-        <SolidColorBrush x:Key="BorderDark" Color="#2A2A2A"/>
-        <SolidColorBrush x:Key="BorderLight" Color="#444444"/>
-        <SolidColorBrush x:Key="TextPrimary" Color="#FFFFFF"/>
-        <SolidColorBrush x:Key="TextMuted" Color="#888888"/>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Themes/Theme.ObsidianPurple.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+
+            <!-- Converters -->
+            <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+
+            <!-- Global Dynamic Variables -->
+            <sys:Double x:Key="DynamicControlHeight" xmlns:sys="clr-namespace:System;assembly=mscorlib">34.0</sys:Double>
+            <sys:Double x:Key="DynamicPaddingX" xmlns:sys="clr-namespace:System;assembly=mscorlib">12.0</sys:Double>
+            <sys:Double x:Key="DynamicFontSizeSm" xmlns:sys="clr-namespace:System;assembly=mscorlib">11.0</sys:Double>
+            <sys:Double x:Key="DynamicFontSizeBase" xmlns:sys="clr-namespace:System;assembly=mscorlib">13.0</sys:Double>
+            <sys:Double x:Key="DynamicFontSizeLg" xmlns:sys="clr-namespace:System;assembly=mscorlib">15.0</sys:Double>
+            <sys:Double x:Key="DynamicFontSizeXl" xmlns:sys="clr-namespace:System;assembly=mscorlib">18.0</sys:Double>
+
+            <!-- Global Legacy Compatibility Brushes -->
+            <SolidColorBrush x:Key="AppBg" Color="{StaticResource Color.ChassisDeep}"/>
+            <SolidColorBrush x:Key="ControlDarkBg" Color="{StaticResource Color.ChassisCard}"/>
+            <SolidColorBrush x:Key="ControlHoverBg" Color="{StaticResource Color.ChassisCardHover}"/>
+            <SolidColorBrush x:Key="ControlSelectedBg" Color="{StaticResource Color.Accent}"/>
+            <SolidColorBrush x:Key="BorderDark" Color="{StaticResource Color.BorderSubtle}"/>
+            <SolidColorBrush x:Key="BorderLight" Color="{StaticResource Color.Border}"/>
+            <SolidColorBrush x:Key="TextPrimary" Color="{StaticResource Color.TextPrimary}"/>
+            <SolidColorBrush x:Key="TextMuted" Color="{StaticResource Color.TextSecondary}"/>
+
+            <!-- Teenage Engineering Hardware Brutalism Tactile Button Style -->
+            <Style x:Key="TeTactileButton" TargetType="Button">
+                <Setter Property="Background" Value="{DynamicResource Brush.ChassisCard}"/>
+                <Setter Property="Foreground" Value="{DynamicResource Brush.TextPrimary}"/>
+                <Setter Property="BorderBrush" Value="{DynamicResource Brush.Border}"/>
+                <Setter Property="BorderThickness" Value="1"/>
+                <Setter Property="Padding" Value="14,8"/>
+                <Setter Property="FontWeight" Value="SemiBold"/>
+                <Setter Property="FontSize" Value="12"/>
+                <Setter Property="Cursor" Value="Hand"/>
+                <Setter Property="SnapsToDevicePixels" Value="True"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="Button">
+                            <Grid>
+                                <!-- Recessed Well Bed / Cavity Shadow -->
+                                <Border x:Name="WellBed"
+                                        Background="{DynamicResource Brush.ChassisDeep}"
+                                        CornerRadius="8"
+                                        Opacity="0.6"/>
+
+                                <!-- Elevated Physical Keycap -->
+                                <Border x:Name="Keycap"
+                                        Background="{TemplateBinding Background}"
+                                        BorderBrush="{TemplateBinding BorderBrush}"
+                                        BorderThickness="{TemplateBinding BorderThickness}"
+                                        CornerRadius="8"
+                                        Padding="{TemplateBinding Padding}"
+                                        RenderTransformOrigin="0.5,0.5">
+                                    <Border.RenderTransform>
+                                        <TranslateTransform x:Name="KeyTransform" X="0" Y="0"/>
+                                    </Border.RenderTransform>
+                                    <Border.Effect>
+                                        <DropShadowEffect x:Name="KeyShadow" Color="#000000" BlurRadius="6" ShadowDepth="2" Direction="270" Opacity="0.4"/>
+                                    </Border.Effect>
+                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                            </Grid>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="Keycap" Property="Background" Value="{DynamicResource Brush.ChassisCardHover}"/>
+                                    <Setter TargetName="Keycap" Property="BorderBrush" Value="{DynamicResource Brush.AccentGlow}"/>
+                                </Trigger>
+                                <Trigger Property="IsPressed" Value="True">
+                                    <Setter TargetName="Keycap" Property="RenderTransform">
+                                        <Setter.Value>
+                                            <TranslateTransform Y="2.0"/>
+                                        </Setter.Value>
+                                    </Setter>
+                                    <Setter TargetName="Keycap" Property="Effect">
+                                        <Setter.Value>
+                                            <DropShadowEffect Color="#000000" BlurRadius="2" ShadowDepth="0.5" Direction="270" Opacity="0.2"/>
+                                        </Setter.Value>
+                                    </Setter>
+                                    <Setter TargetName="Keycap" Property="BorderBrush" Value="{DynamicResource Brush.Accent}"/>
+                                </Trigger>
+                                <Trigger Property="IsEnabled" Value="False">
+                                    <Setter Property="Opacity" Value="0.45"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <!-- Tactile Accent / Danger / Success Button Variants -->
+            <Style x:Key="TeAccentButton" TargetType="Button" BasedOn="{StaticResource TeTactileButton}">
+                <Setter Property="Background" Value="{DynamicResource Brush.Accent}"/>
+                <Setter Property="Foreground" Value="#FFFFFF"/>
+                <Setter Property="BorderBrush" Value="{DynamicResource Brush.AccentGlow}"/>
+            </Style>
+
+            <Style x:Key="TeDangerButton" TargetType="Button" BasedOn="{StaticResource TeTactileButton}">
+                <Setter Property="Background" Value="#991B1B"/>
+                <Setter Property="Foreground" Value="#FFFFFF"/>
+                <Setter Property="BorderBrush" Value="{DynamicResource Brush.Danger}"/>
+            </Style>
+
+            <Style x:Key="TeSuccessButton" TargetType="Button" BasedOn="{StaticResource TeTactileButton}">
+                <Setter Property="Background" Value="#065F46"/>
+                <Setter Property="Foreground" Value="#FFFFFF"/>
+                <Setter Property="BorderBrush" Value="{DynamicResource Brush.Success}"/>
+            </Style>
 
         <!-- Custom ScrollBar Styling -->
         <Style TargetType="ScrollBar">
@@ -153,7 +253,7 @@
                                             CornerRadius="4" 
                                             Margin="0,2,0,0">
                                         <ScrollViewer SnapsToDevicePixels="True">
-                                            <StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Circular"/>
+                                            <StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Cycle"/>
                                         </ScrollViewer>
                                     </Border>
                                 </Grid>
@@ -209,5 +309,6 @@
                 </Setter.Value>
             </Setter>
         </Style>
+        </ResourceDictionary>
     </Application.Resources>
 </Application>

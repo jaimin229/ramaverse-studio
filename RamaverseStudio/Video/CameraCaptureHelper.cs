@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using FlashCap;
 
@@ -24,6 +25,27 @@ namespace RamaverseStudio.Video
         private CaptureDevice? _captureDevice;
         private readonly object _frameLock = new object();
         private Bitmap? _latestFrame;
+        private string? _runningCameraId;
+
+        // Frame-gating: the compositor polls at canvas FPS, so decoding every
+        // incoming camera frame both wastes CPU and (critically) churns GDI
+        // bitmaps faster than they can be reused. We coalesce to one decode
+        // per compositor request: the newest pixels only.
+        private byte[]? _pendingFrameBytes;
+        private int _pendingLength;
+
+        public bool IsRunning
+        {
+            get
+            {
+                lock (_frameLock)
+                {
+                    return _captureDevice != null && _runningCameraId != null;
+                }
+            }
+        }
+
+        public string? ActiveCameraId => _runningCameraId;
 
         public event Action<Bitmap>? FrameArrived;
 
@@ -73,7 +95,6 @@ namespace RamaverseStudio.Video
 
             try
             {
-                // Find best matching characteristic
                 var charact = descriptor.Characteristics
                     .OrderByDescending(c => c.Width == targetWidth && c.Height == targetHeight)
                     .ThenByDescending(c => c.Width * c.Height)
@@ -86,35 +107,60 @@ namespace RamaverseStudio.Video
 
                 if (charact == null) return false;
 
-                _captureDevice = await descriptor.OpenAsync(
-                    charact,
-                    OnPixelBufferArrivedAsync);
-
+                _captureDevice = await descriptor.OpenAsync(charact, OnPixelBufferArrivedAsync);
                 await _captureDevice.StartAsync();
+
+                lock (_frameLock)
+                {
+                    _runningCameraId = cameraInfo?.Id ?? descriptor.Identity?.ToString();
+                }
                 return true;
             }
             catch (Exception)
             {
+                lock (_frameLock) { _runningCameraId = null; }
                 return false;
             }
+        }
+
+        /// <summary>
+        /// Starts the camera whose Identity matches the given source's CameraDeviceId.
+        /// This is the path used by the compositor when a saved scene references a webcam.
+        /// </summary>
+        public async Task<bool> StartCameraByIdAsync(string cameraId, int targetWidth = 1280, int targetHeight = 720, int targetFps = 30)
+        {
+            if (string.IsNullOrWhiteSpace(cameraId)) return false;
+
+            var cameras = GetAvailableCameras();
+            var match = cameras.FirstOrDefault(c => c.Id == cameraId)
+                        ?? cameras.FirstOrDefault(c => cameraId.Contains(c.Id, StringComparison.Ordinal))
+                        ?? cameras.FirstOrDefault(c => c.Id.Contains(cameraId, StringComparison.Ordinal));
+
+            if (match == null)
+            {
+                return false;
+            }
+
+            return await StartCameraAsync(match, targetWidth, targetHeight, targetFps);
         }
 
         private Task OnPixelBufferArrivedAsync(PixelBufferScope bufferScope)
         {
             try
             {
-                // Extract image into Bitmap
+                // Stage raw bytes only — the decode happens on the consumer's
+                // cadence (GetLatestFrame), so a 60fps camera feeding a 30fps
+                // canvas no longer allocates 2x the GDI bitmaps it needs.
                 byte[] imageBytes = bufferScope.Buffer.ExtractImage();
-                using var ms = new MemoryStream(imageBytes);
-                var bmp = new Bitmap(ms);
-
                 lock (_frameLock)
                 {
-                    _latestFrame?.Dispose();
-                    _latestFrame = (Bitmap)bmp.Clone();
+                    if (_pendingFrameBytes == null || _pendingFrameBytes.Length < imageBytes.Length)
+                    {
+                        _pendingFrameBytes = new byte[imageBytes.Length];
+                    }
+                    Buffer.BlockCopy(imageBytes, 0, _pendingFrameBytes, 0, imageBytes.Length);
+                    _pendingLength = imageBytes.Length;
                 }
-
-                FrameArrived?.Invoke(bmp);
             }
             catch { }
 
@@ -123,6 +169,45 @@ namespace RamaverseStudio.Video
 
         public Bitmap? GetLatestFrame()
         {
+            // Only decode when NEW bytes arrived since the last call; otherwise
+            // the previous decoded frame is still the newest picture we have.
+            // This caps decode work at the camera's real frame rate regardless
+            // of how often the compositor polls.
+            bool hasNew;
+            lock (_frameLock)
+            {
+                hasNew = _pendingLength > 0;
+            }
+
+            if (hasNew)
+            {
+                Bitmap? decoded = null;
+                try
+                {
+                    lock (_frameLock)
+                    {
+                        using var ms = new MemoryStream(_pendingFrameBytes!, 0, _pendingLength);
+                        _pendingLength = 0; // consume
+                        using var raw = Image.FromStream(ms);
+                        decoded = new Bitmap(raw);
+                    }
+                }
+                catch
+                {
+                    decoded?.Dispose();
+                    decoded = null;
+                }
+
+                if (decoded != null)
+                {
+                    lock (_frameLock)
+                    {
+                        _latestFrame?.Dispose();
+                        _latestFrame = decoded;
+                    }
+                }
+            }
+
             lock (_frameLock)
             {
                 return _latestFrame != null ? (Bitmap)_latestFrame.Clone() : null;
@@ -131,19 +216,22 @@ namespace RamaverseStudio.Video
 
         public async Task StopCameraAsync()
         {
-            if (_captureDevice != null)
+            var device = _captureDevice;
+            _captureDevice = null;
+
+            if (device != null)
             {
                 try
                 {
-                    await _captureDevice.StopAsync();
-                    await _captureDevice.DisposeAsync();
+                    await device.StopAsync();
+                    await device.DisposeAsync();
                 }
                 catch { }
-                _captureDevice = null;
             }
 
             lock (_frameLock)
             {
+                _runningCameraId = null;
                 _latestFrame?.Dispose();
                 _latestFrame = null;
             }
@@ -151,7 +239,11 @@ namespace RamaverseStudio.Video
 
         public void Dispose()
         {
-            _ = StopCameraAsync();
+            try
+            {
+                _ = StopCameraAsync();
+            }
+            catch { }
         }
     }
 }

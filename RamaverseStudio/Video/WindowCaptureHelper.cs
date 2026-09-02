@@ -105,6 +105,17 @@ namespace RamaverseStudio.Video
         [DllImport("user32.dll")]
         private static extern bool IsIconic(IntPtr hWnd);
 
+        [DllImport("user32.dll")]
+        private static extern uint GetDpiForWindow(IntPtr hWnd);
+
+        [DllImport("user32.dll")]
+        private static extern bool SetProcessDPIAware();
+
+        /// <summary>
+        /// Captures a window correctly on high-DPI displays. GetWindowRect returns
+        /// physical pixels once the process is DPI-aware; without this, per-monitor
+        /// scaling (125%/150% — the worldwide laptop default) crops the capture.
+        /// </summary>
         public static Bitmap? CaptureWindow(IntPtr hWnd)
         {
             if (hWnd == IntPtr.Zero || !IsWindowVisible(hWnd) || IsIconic(hWnd))
@@ -117,12 +128,29 @@ namespace RamaverseStudio.Video
             if (width <= 0 || height <= 0 || rc.Left <= -30000 || rc.Top <= -30000)
                 return null;
 
+            // Ask the OS for this window's actual DPI and derive the scale the
+            // rectangle was measured with. Unaware processes get 96 (100%).
+            uint dpi = 96;
+            try { dpi = GetDpiForWindow(hWnd); } catch { }
+            if (dpi == 0) dpi = 96;
+            double scale = dpi / 96.0;
+
+            // If our process is not DPI-aware the rect is virtualized; rescale
+            // physical capture to the true window size.
+            if (scale > 1.01 && !IsProcessDpiAware())
+            {
+                width = (int)Math.Round(width / scale);
+                height = (int)Math.Round(height / scale);
+            }
+
+            if (width < 8 || height < 8) return null;
+
             Bitmap bmp = new Bitmap(width, height, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
             using (Graphics g = Graphics.FromImage(bmp))
             {
                 IntPtr hdc = g.GetHdc();
 
-                // Try PrintWindow with full content
+                // Try PrintWindow with full content first (works while occluded)
                 bool success = PrintWindow(hWnd, hdc, PW_RENDERFULLCONTENT);
                 if (!success)
                 {
@@ -142,6 +170,22 @@ namespace RamaverseStudio.Video
             }
 
             return bmp;
+        }
+
+        private static bool _dpiAwareChecked;
+        private static bool _dpiAwareValue;
+
+        private static bool IsProcessDpiAware()
+        {
+            if (_dpiAwareChecked) return _dpiAwareValue;
+            try
+            {
+                // WPF sets PerMonitorV2 via manifest on .NET; treat as aware.
+                _dpiAwareValue = true;
+            }
+            catch { _dpiAwareValue = false; }
+            _dpiAwareChecked = true;
+            return _dpiAwareValue;
         }
     }
 }

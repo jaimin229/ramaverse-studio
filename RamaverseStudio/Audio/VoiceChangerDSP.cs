@@ -21,6 +21,8 @@ namespace RamaverseStudio.Audio
 
         // Bandpass Filter
         private readonly BiQuadFilter _bandpassFilter;
+        private double _cachedLowHz = -1;
+        private double _cachedHighHz = -1;
 
         public VoiceChangerDSP(int sampleRate)
         {
@@ -31,6 +33,31 @@ namespace RamaverseStudio.Audio
             _readIndex2 = _grainSize / 2.0;
 
             _bandpassFilter = new BiQuadFilter(sampleRate);
+        }
+
+        /// <summary>Non-negative modulo: result always in [0, m).</summary>
+        private static int SafeMod(int value, int m)
+        {
+            int r = value % m;
+            return r < 0 ? r + m : r;
+        }
+
+        private static double SafeMod(double value, double m)
+        {
+            double r = value % m;
+            return r < 0 ? r + m : r;
+        }
+
+        /// <summary>
+        /// Keeps a fractional read index within one ring-length behind the
+        /// write head, so the granular reads always reference valid samples.
+        /// </summary>
+        private static double ClampToWindow(double readIndex, int writeIndex, int bufferLength)
+        {
+            double max = writeIndex + bufferLength;
+            while (readIndex >= max) readIndex -= bufferLength;
+            while (readIndex < writeIndex - bufferLength) readIndex += bufferLength;
+            return readIndex;
         }
 
         public float Process(float sample, AudioFilterSettings settings)
@@ -49,24 +76,25 @@ namespace RamaverseStudio.Audio
             if (Math.Abs(semitones) > 0.05)
             {
                 double pitchRatio = Math.Pow(2.0, semitones / 12.0);
-                
-                // Read from grain 1
-                int idx1_0 = (int)Math.Floor(_readIndex1) % bufferLength;
+
+                // Read from grain 1 (SafeMod: C# % returns negative for negative
+                // dividends, which crashed with IndexOutOfRange after wraps.)
+                int idx1_0 = SafeMod((int)Math.Floor(_readIndex1), bufferLength);
                 int idx1_1 = (idx1_0 + 1) % bufferLength;
                 float frac1 = (float)(_readIndex1 - Math.Floor(_readIndex1));
                 float s1 = _ringBuffer[idx1_0] * (1.0f - frac1) + _ringBuffer[idx1_1] * frac1;
 
                 // Triangular / Hann crossfade window for grain 1
-                double phaseInGrain1 = (_readIndex1 % _grainSize) / _grainSize;
+                double phaseInGrain1 = SafeMod(_readIndex1, _grainSize) / _grainSize;
                 float win1 = (float)(0.5 * (1.0 - Math.Cos(2.0 * Math.PI * phaseInGrain1)));
 
                 // Read from grain 2 (offset by 180 degrees)
-                int idx2_0 = (int)Math.Floor(_readIndex2) % bufferLength;
+                int idx2_0 = SafeMod((int)Math.Floor(_readIndex2), bufferLength);
                 int idx2_1 = (idx2_0 + 1) % bufferLength;
                 float frac2 = (float)(_readIndex2 - Math.Floor(_readIndex2));
                 float s2 = _ringBuffer[idx2_0] * (1.0f - frac2) + _ringBuffer[idx2_1] * frac2;
 
-                double phaseInGrain2 = (_readIndex2 % _grainSize) / _grainSize;
+                double phaseInGrain2 = SafeMod(_readIndex2, _grainSize) / _grainSize;
                 float win2 = (float)(0.5 * (1.0 - Math.Cos(2.0 * Math.PI * phaseInGrain2)));
 
                 pitchShiftedSample = (s1 * win1 + s2 * win2);
@@ -74,11 +102,18 @@ namespace RamaverseStudio.Audio
                 _readIndex1 += pitchRatio;
                 _readIndex2 += pitchRatio;
 
-                // Grain wrapping
+                // Grain read heads must chase the write head from behind, wrapping
+                // modulo the ring. Without the wrap, downshifts run far past the
+                // write index and produce a ~2 second delayed echo.
                 if (_readIndex1 >= _writeIndex + _grainSize)
-                    _readIndex1 = _writeIndex;
+                    _readIndex1 -= bufferLength;
                 if (_readIndex2 >= _writeIndex + _grainSize)
-                    _readIndex2 = _writeIndex;
+                    _readIndex2 -= bufferLength;
+
+                // Clamp any residual drift into the valid window so indices
+                // never wander out of [0, bufferLength).
+                _readIndex1 = ClampToWindow(_readIndex1, _writeIndex, bufferLength);
+                _readIndex2 = ClampToWindow(_readIndex2, _writeIndex, bufferLength);
             }
 
             _writeIndex = (_writeIndex + 1) % bufferLength;
@@ -100,11 +135,15 @@ namespace RamaverseStudio.Audio
             // 4. Bandpass Filtering (Radio / Megaphone / Telephone)
             if (settings.BandpassEnabled)
             {
-                float centerFreq = (float)((settings.BandpassLowHz + settings.BandpassHighHz) / 2.0);
-                float bandwidth = (float)(settings.BandpassHighHz - settings.BandpassLowHz);
-                float q = Math.Max(0.5f, centerFreq / Math.Max(100.0f, bandwidth));
-
-                _bandpassFilter.SetBandPass(centerFreq, q);
+                if (Math.Abs(_cachedLowHz - settings.BandpassLowHz) > 0.1 || Math.Abs(_cachedHighHz - settings.BandpassHighHz) > 0.1)
+                {
+                    _cachedLowHz = settings.BandpassLowHz;
+                    _cachedHighHz = settings.BandpassHighHz;
+                    float centerFreq = (float)((settings.BandpassLowHz + settings.BandpassHighHz) / 2.0);
+                    float bandwidth = (float)(settings.BandpassHighHz - settings.BandpassLowHz);
+                    float q = Math.Max(0.5f, centerFreq / Math.Max(100.0f, bandwidth));
+                    _bandpassFilter.SetBandPass(centerFreq, q);
+                }
                 outSample = _bandpassFilter.Process(outSample) * 2.2f; // Makeup
             }
 
@@ -129,6 +168,8 @@ namespace RamaverseStudio.Audio
             _readIndex1 = 0;
             _readIndex2 = _grainSize / 2.0;
             _carrierPhase = 0;
+            _cachedLowHz = -1;
+            _cachedHighHz = -1;
             _bandpassFilter.Reset();
         }
     }

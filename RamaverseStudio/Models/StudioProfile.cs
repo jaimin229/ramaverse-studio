@@ -50,6 +50,7 @@ namespace RamaverseStudio.Models
         private int _recordingBitrateKbps = 12000;
         private int _audioBitrateKbps = 320;
         private bool _multiTrackAudio = false;
+        private bool _losslessRecording = false;
         private CreatorPreset _activePreset = CreatorPreset.YouTube1080p60;
 
         // Audio Device Settings
@@ -57,6 +58,9 @@ namespace RamaverseStudio.Models
         private string _selectedAudioOutputDevice = "Default";
         private double _micVolume = 1.0;
         private double _desktopVolume = 0.8;
+
+        // Localization
+        private string _interfaceLanguage = "en";
 
         // Streaming Settings (Primary: YouTube / Twitch)
         private string _streamPlatform = "YouTube Live";
@@ -96,6 +100,7 @@ namespace RamaverseStudio.Models
         public int RecordingBitrateKbps { get => _recordingBitrateKbps; set => SetField(ref _recordingBitrateKbps, value); }
         public int AudioBitrateKbps { get => _audioBitrateKbps; set => SetField(ref _audioBitrateKbps, value); }
         public bool MultiTrackAudioRecording { get => _multiTrackAudio; set => SetField(ref _multiTrackAudio, value); }
+        public bool LosslessRecording { get => _losslessRecording; set => SetField(ref _losslessRecording, value); }
         
         public CreatorPreset ActivePreset
         {
@@ -113,6 +118,8 @@ namespace RamaverseStudio.Models
         public string SelectedAudioOutputDevice { get => _selectedAudioOutputDevice; set => SetField(ref _selectedAudioOutputDevice, value); }
         public double MicVolume { get => _micVolume; set => SetField(ref _micVolume, value); }
         public double DesktopVolume { get => _desktopVolume; set => SetField(ref _desktopVolume, value); }
+
+        public string InterfaceLanguage { get => _interfaceLanguage; set => SetField(ref _interfaceLanguage, value); }
 
         public string StreamPlatform { get => _streamPlatform; set => SetField(ref _streamPlatform, value); }
         public string RtmpServerUrl { get => _rtmpServerUrl; set => SetField(ref _rtmpServerUrl, value); }

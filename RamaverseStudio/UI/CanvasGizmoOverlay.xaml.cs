@@ -22,6 +22,7 @@ namespace RamaverseStudio.UI
         private double _initialX, _initialY, _initialW, _initialH, _initialRot;
 
         public event Action? TransformModified;
+        public event Action? TransformBegun;
 
         public CanvasGizmoOverlay()
         {
@@ -32,11 +33,34 @@ namespace RamaverseStudio.UI
             MouseLeave += (s, e) => OnMouseUp(s, null!);
         }
 
+        private void OnBoundingBoxMouseDown(object sender, MouseButtonEventArgs e)
+        {
+            if (_selectedSource == null || _selectedSource.IsLocked) return;
+
+            TransformBegun?.Invoke();
+            _isDragging = true;
+            _dragStartMouse = e.GetPosition(OverlayCanvas);
+            _initialX = _selectedSource.X;
+            _initialY = _selectedSource.Y;
+            SelectionBox.CaptureMouse();
+            e.Handled = true;
+        }
+
         public void SetCanvasResolution(int w, int h)
         {
             _canvasWidth = Math.Max(1, w);
             _canvasHeight = Math.Max(1, h);
             UpdateGizmo();
+        }
+
+        public bool ShowSafeAreas
+        {
+            get => GuidesGrid.Visibility == Visibility.Visible;
+            set
+            {
+                GuidesGrid.Visibility = value ? Visibility.Visible : Visibility.Collapsed;
+                UpdateGizmo();
+            }
         }
 
         public void SetSelectedSource(SourceItem? source)
@@ -108,23 +132,12 @@ namespace RamaverseStudio.UI
             Canvas.SetTop(handle, centerY - handle.Height / 2.0);
         }
 
-        private void OnBoundingBoxMouseDown(object sender, MouseButtonEventArgs e)
-        {
-            if (_selectedSource == null || _selectedSource.IsLocked) return;
-
-            _isDragging = true;
-            _dragStartMouse = e.GetPosition(OverlayCanvas);
-            _initialX = _selectedSource.X;
-            _initialY = _selectedSource.Y;
-            SelectionBox.CaptureMouse();
-            e.Handled = true;
-        }
-
         private void OnHandleMouseDown(object sender, MouseButtonEventArgs e)
         {
             if (_selectedSource == null || _selectedSource.IsLocked) return;
             if (sender is FrameworkElement el && el.Tag is string handleTag)
             {
+                TransformBegun?.Invoke();
                 _isResizing = true;
                 _activeHandle = handleTag;
                 _dragStartMouse = e.GetPosition(OverlayCanvas);
@@ -141,6 +154,7 @@ namespace RamaverseStudio.UI
         {
             if (_selectedSource == null || _selectedSource.IsLocked) return;
 
+            TransformBegun?.Invoke();
             _isRotating = true;
             _dragStartMouse = e.GetPosition(OverlayCanvas);
             _initialRot = _selectedSource.Rotation;

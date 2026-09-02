@@ -22,6 +22,24 @@
         <!-- Settings Tabs -->
         <TabControl Grid.Row="1" Background="#0C0C0C" BorderBrush="#262626" BorderThickness="1">
 
+            <!-- General / Language Tab -->
+            <TabItem Header="GENERAL">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="20">
+                    <StackPanel>
+                        <TextBlock Text="INTERFACE LANGUAGE" FontSize="11" FontWeight="Bold" Foreground="#888888" Margin="0,0,0,6"/>
+                        <ComboBox x:Name="ComboLanguage" Margin="0,0,0,8"/>
+                        <TextBlock Text="Language changes the entire studio interface. New languages can be added by dropping a JSON file into %APPDATA%\RamaverseStudio\lang\ — no update needed." FontSize="11" Foreground="#666666" TextWrapping="Wrap" Margin="0,0,0,18"/>
+
+                        <TextBlock Text="RECORDING SAFETY" FontSize="11" FontWeight="Bold" Foreground="#888888" Margin="0,0,0,6"/>
+                        <Border Background="#101010" BorderBrush="#2A2A2A" BorderThickness="1" CornerRadius="4" Padding="14" Margin="0,0,0,14">
+                            <StackPanel>
+                                <TextBlock Text="Crash-proof capture is always ON: recordings are written to a crash-safe MKV first and instantly converted to your chosen format when you press stop. If Windows crashes or power cuts mid-recording, your footage is still saved — Ramaverse also auto-recovers any interrupted recordings on next launch." FontSize="11" Foreground="#BBBBBB" TextWrapping="Wrap" LineHeight="17"/>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
             <!-- Video & Canvas Tab -->
             <TabItem Header="VIDEO &amp; CANVAS">
                 <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="20">
@@ -103,6 +121,15 @@
                                 </ComboBox>
                             </StackPanel>
                         </Grid>
+
+                        <!-- Recording quality modes -->
+                        <Border Background="#101010" BorderBrush="#2A2A2A" BorderThickness="1" CornerRadius="4" Padding="14" Margin="0,0,0,14">
+                            <StackPanel>
+                                <CheckBox x:Name="ChkLosslessRecording" Content="LOSSLESS ARCHIVAL RECORDING (huge files, perfect quality — for editors &amp; archives)" FontWeight="Bold" FontSize="11" Foreground="#FFFFFF" Margin="0,0,0,10"/>
+                                <CheckBox x:Name="ChkMultiTrackAudio" Content="MULTI-TRACK AUDIO — record microphone and desktop as separate streams in one file (editors can remix in post)" FontWeight="Bold" FontSize="11" Foreground="#FFFFFF"/>
+                                <TextBlock Text="Note: multi-track recordings keep mic audio clean of game sound — ideal for podcasts, tutorials and post-production mixing." FontSize="11" Foreground="#777777" TextWrapping="Wrap" Margin="0,8,0,0"/>
+                            </StackPanel>
+                        </Border>
                     </StackPanel>
                 </ScrollViewer>
             </TabItem>

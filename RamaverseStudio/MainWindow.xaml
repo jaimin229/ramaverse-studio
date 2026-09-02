@@ -7,6 +7,7 @@
         xmlns:ui="clr-namespace:RamaverseStudio.UI"
         mc:Ignorable="d"
         Title="Ramaverse Studio — Creator Suite" 
+        Icon="Assets/logo.png"
         Height="880" Width="1440" MinHeight="720" MinWidth="1100"
         WindowStartupLocation="CenterScreen"
         Background="#000000" Foreground="#FFFFFF"
@@ -84,6 +85,7 @@
             <RowDefinition Height="54"/>  <!-- Top Toolbar -->
             <RowDefinition Height="*"/>   <!-- Main Studio Deck -->
             <RowDefinition Height="240"/> <!-- Bottom Sources & Audio Mixer -->
+            <RowDefinition Height="28"/>  <!-- Stream Health Assistant -->
             <RowDefinition Height="26"/>  <!-- Status Telemetry Footer -->
         </Grid.RowDefinitions>
 
@@ -98,16 +100,17 @@
 
                 <!-- Logo & Brand Badge -->
                 <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                    <Border Background="#FFFFFF" CornerRadius="4" Width="28" Height="28" Margin="0,0,10,0">
-                        <TextBlock Text="R" FontSize="16" FontWeight="Black" Foreground="#000000" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    <Border CornerRadius="8" Width="34" Height="34" Margin="0,0,12,0" ClipToBounds="True" Background="#140E26" BorderBrush="#7C3AED" BorderThickness="1">
+                        <Image Source="pack://application:,,,/Assets/logo.png" Width="32" Height="32" RenderOptions.BitmapScalingMode="HighQuality"/>
                     </Border>
                     <StackPanel VerticalAlignment="Center">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="RAMAVERSE" FontSize="14" FontWeight="Bold" Foreground="#FFFFFF"/>
-                            <TextBlock Text="STUDIO" FontSize="14" FontWeight="Normal" Foreground="#888888" Margin="5,0,0,0"/>
-                            <Border Background="#1C1C1C" BorderBrush="#333333" BorderThickness="1" CornerRadius="3" Padding="4,1" Margin="8,0,0,0" VerticalAlignment="Center">
-                                <TextBlock Text="v1.0" FontSize="9" FontWeight="Bold" Foreground="#AAAAAA"/>
+                            <TextBlock Text="STUDIO" FontSize="14" FontWeight="Normal" Foreground="#A855F7" Margin="5,0,0,0"/>
+                            <Border Background="#1C1428" BorderBrush="#7C3AED" BorderThickness="1" CornerRadius="4" Padding="5,1" Margin="8,0,0,0" VerticalAlignment="Center">
+                                <TextBlock Text="v1.3" FontSize="9" FontWeight="Bold" Foreground="#C084FC"/>
                             </Border>
+                            <Button x:Name="BtnProLicense" Content="UPGRADE PRO" Style="{StaticResource TeAccentButton}" Padding="6,1" Margin="8,0,0,0" FontSize="9" FontWeight="Bold" ToolTip="Activate or Manage Pro Creator License" Click="OnLicenseClicked"/>
                         </StackPanel>
                         <TextBlock x:Name="TxtActiveProfile" Text="1920x1080 • 60 FPS • Master Broadcast" FontSize="10" Foreground="{StaticResource TextSecondary}"/>
                     </StackPanel>
@@ -127,23 +130,44 @@
 
                 <!-- Right Action Production Deck -->
                 <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                    <!-- Setup Wizard for First-Time Streamers -->
+                    <Button x:Name="BtnAutoConfigWizard" Content="SETUP WIZARD" Margin="0,0,8,0" Padding="10,6" Background="#1E1438" BorderBrush="#7C3AED" Foreground="#C084FC" FontWeight="Bold" ToolTip="Run Automatic 3-Step Stream Setup Wizard" Click="OnAutoConfigWizardClicked"/>
+
+                    <!-- Commands Quick Launcher -->
+                    <Button x:Name="BtnCommandPalette" Content="COMMANDS" Margin="0,0,8,0" Padding="10,6" Background="#161224" BorderBrush="#3B2D54" Foreground="#E2E8F0" FontWeight="SemiBold" ToolTip="Open Fast Action Launcher (Ctrl+K)" Click="OnCommandPaletteClicked"/>
+
                     <!-- Snapshot button -->
                     <Button x:Name="BtnSnapshot" Content="Snapshot" Margin="0,0,8,0" Padding="10,6" ToolTip="Take Instant Studio Screenshot (Ctrl+S)" Click="OnSnapshotClicked"/>
 
                     <!-- Instant Replay Clip button -->
-                    <Button x:Name="BtnSaveReplay" Content="⚡ CLIP (30s)" Margin="0,0,8,0" Padding="10,6" Background="#1C1C1C" BorderBrush="#3A3A3A" Foreground="#FFFFFF" FontWeight="Bold" ToolTip="Save Instant 30-Second Replay / Short Clip (Ctrl+Shift+F10)" Click="OnSaveReplayClicked"/>
+                    <Button x:Name="BtnSaveReplay" Content="CLIP (30s)" Margin="0,0,8,0" Padding="10,6" Background="#1C1C1C" BorderBrush="#3A3A3A" Foreground="#FFFFFF" FontWeight="Bold" ToolTip="Save Instant 30-Second Replay / Short Clip (Ctrl+Shift+F10)" Click="OnSaveReplayClicked"/>
+
+                    <!-- Virtual Camera Toggle button -->
+                    <Button x:Name="BtnVirtualCam" Content="VIRTUAL CAM" Margin="0,0,8,0" Padding="10,6" Background="#181818" BorderBrush="#444444" Foreground="#FFFFFF" FontWeight="Bold" ToolTip="Start Virtual Camera for Discord / Zoom / Teams" Click="OnVirtualCamToggleClicked"/>
 
                     <!-- Pause Rec Button -->
                     <Button x:Name="BtnPauseRec" Content="Pause" Margin="0,0,8,0" Padding="10,6" Visibility="Collapsed" ToolTip="Pause Recording (Ctrl+P)" Click="OnPauseRecClicked"/>
 
                     <!-- Start/Stop Recording Button -->
-                    <Button x:Name="BtnRecord" Content="● RECORD" Background="#181818" BorderBrush="#444444" Foreground="#FFFFFF" Padding="14,6" Margin="0,0,8,0" FontWeight="Bold" ToolTip="Start Instant High-Quality MP4 Recording (Ctrl+R)" Click="OnRecordToggleClicked"/>
+                    <Button x:Name="BtnRecord" Content="RECORD" Background="#181818" BorderBrush="#444444" Foreground="#FFFFFF" Padding="14,6" Margin="0,0,8,0" FontWeight="Bold" ToolTip="Start Instant High-Quality MP4 Recording (Ctrl+R)" Click="OnRecordToggleClicked"/>
 
                     <!-- Go Live Streaming Button -->
-                    <Button x:Name="BtnStream" Content="📡 GO LIVE" Background="#181818" BorderBrush="#444444" Foreground="#FFFFFF" Padding="14,6" Margin="0,0,8,0" FontWeight="Bold" ToolTip="Broadcast Live to YouTube, Twitch, or Kick (Ctrl+L)" Click="OnStreamToggleClicked"/>
+                    <Button x:Name="BtnStream" Content="GO LIVE" Background="#181818" BorderBrush="#444444" Foreground="#FFFFFF" Padding="14,6" Margin="0,0,8,0" FontWeight="Bold" ToolTip="Broadcast Live to YouTube, Twitch, or Kick (Ctrl+L)" Click="OnStreamToggleClicked"/>
+
+                    <!-- Studio Mode Toggle -->
+                    <Button x:Name="BtnStudioMode" Content="STUDIO MODE" Margin="0,0,8,0" Padding="10,6" Background="#181818" BorderBrush="#3A3A3A" Foreground="#FFFFFF" FontWeight="Bold" ToolTip="Toggle Studio Mode (Preview Staging vs Program Live)" Click="OnStudioModeToggled"/>
+
+                    <!-- Remote Touch Deck -->
+                    <Button x:Name="BtnRemoteControl" Content="TOUCH DECK" Margin="0,0,8,0" Padding="10,6" Background="#181818" BorderBrush="#3A3A3A" Foreground="#FFFFFF" ToolTip="Mobile Touch Controller URL (Open on phone/tablet)" Click="OnRemoteControlClicked"/>
+
+                    <!-- Streamer Guide & Tutorial -->
+                    <Button x:Name="BtnTutorial" Content="GUIDE" Padding="10,6" Margin="0,0,8,0" Background="#1D2432" BorderBrush="#3B82F6" Foreground="#93C5FD" FontWeight="Bold" ToolTip="Open Streamer Masterclass &amp; Usage Guide (F1)" Click="OnTutorialClicked"/>
 
                     <!-- Studio Settings -->
-                    <Button x:Name="BtnSettings" Content="Settings" Padding="10,6" ToolTip="Open Studio Audio, Video &amp; Streaming Settings" Click="OnSettingsClicked"/>
+                    <Button x:Name="BtnSettings" Content="Settings" Padding="10,6" Margin="0,0,8,0" ToolTip="Open Studio Audio, Video &amp; Streaming Settings" Click="OnSettingsClicked"/>
+
+                    <!-- Recordings folder -->
+                    <Button x:Name="BtnOpenRecordings" Content="Folder" Padding="10,6" ToolTip="Open the folder containing your recordings and snapshots (Ctrl+O)" Click="OnOpenRecordingsFolderClicked"/>
                 </StackPanel>
             </Grid>
         </Border>
@@ -168,8 +192,20 @@
                     <!-- Header -->
                     <Border Grid.Row="0" Background="{StaticResource PanelHeaderBg}" Padding="10,0">
                         <Grid VerticalAlignment="Center">
-                            <TextBlock Text="SCENES" FontSize="11" FontWeight="Bold" Foreground="{StaticResource TextSecondary}"/>
-                            <TextBlock Text="Fade" HorizontalAlignment="Right" FontSize="10" Foreground="#888888"/>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="SCENES" FontSize="11" FontWeight="Bold" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Center"/>
+                                <Button Content="Pop Out" Padding="4,1" FontSize="9" Margin="6,0,0,0" ToolTip="Detach Scenes into Floating Window for 2nd Monitor" Click="OnUndockScenesClicked"/>
+                            </StackPanel>
+                            <ComboBox x:Name="ComboTransition" HorizontalAlignment="Right" FontSize="10" Padding="4,1" Width="105" SelectionChanged="OnTransitionSelectionChanged" ToolTip="Scene Switch Transition Effect">
+                                <ComboBoxItem Content="Cut (Instant)"/>
+                                <ComboBoxItem Content="Fade (300ms)" IsSelected="True"/>
+                                <ComboBoxItem Content="Fade (600ms)"/>
+                                <ComboBoxItem Content="Slide Left (400ms)"/>
+                                <ComboBoxItem Content="Slide Right (400ms)"/>
+                                <ComboBoxItem Content="Wipe Left (400ms)"/>
+                                <ComboBoxItem Content="Wipe Right (400ms)"/>
+                                <ComboBoxItem Content="Luma Wipe (500ms)"/>
+                            </ComboBox>
                         </Grid>
                     </Border>
 
@@ -214,9 +250,12 @@
                     <!-- Scene Actions Toolbar -->
                     <Border Grid.Row="2" Background="{StaticResource PanelHeaderBg}" Padding="6,0">
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <Button Content="+ Add" Padding="8,3" Margin="0,0,4,0" ToolTip="Create New Scene" Click="OnAddSceneClicked"/>
-                            <Button Content="- Del" Padding="8,3" Margin="0,0,4,0" ToolTip="Remove Selected Scene" Click="OnDeleteSceneClicked"/>
-                            <Button Content="Clone" Padding="8,3" ToolTip="Duplicate Selected Scene" Click="OnDuplicateSceneClicked"/>
+                            <Button Content="+ Add" Padding="6,3" Margin="0,0,3,0" ToolTip="Create New Scene" Click="OnAddSceneClicked"/>
+                            <Button Content="- Del" Padding="6,3" Margin="0,0,3,0" ToolTip="Remove Selected Scene" Click="OnDeleteSceneClicked"/>
+                            <Button Content="Clone" Padding="6,3" Margin="0,0,3,0" ToolTip="Duplicate Selected Scene" Click="OnDuplicateSceneClicked"/>
+                            <Button Content="Rename" Padding="6,3" Margin="0,0,3,0" ToolTip="Rename Selected Scene" Click="OnRenameSceneClicked"/>
+                            <Button Content="📦" Padding="5,3" Margin="0,0,2,0" ToolTip="Export Scene Collection (.rama archive)" Click="OnExportCollectionClicked"/>
+                            <Button Content="📂" Padding="5,3" ToolTip="Import Scene Collection (.rama archive)" Click="OnImportCollectionClicked"/>
                         </StackPanel>
                     </Border>
                 </Grid>
@@ -241,21 +280,62 @@
 
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
                             <CheckBox x:Name="ChkShowGuides" Content="Guides" Foreground="{StaticResource TextSecondary}" Margin="0,0,12,0" ToolTip="Toggle Safe Area &amp; Alignment Grid Guides" Checked="OnGuidesToggled" Unchecked="OnGuidesToggled"/>
+                            <Button Content="Projector" Padding="8,3" FontSize="11" Margin="0,0,6,0" ToolTip="Open a fullscreen preview on another monitor (Esc to close)" Click="OnProjectorClicked"/>
                             <Button Content="Fit Screen" Padding="8,3" FontSize="11" ToolTip="Center and fit preview to window" Click="OnFitScreenClicked"/>
                         </StackPanel>
                     </Grid>
 
-                    <!-- Live Viewport Container -->
-                    <Border Grid.Row="1" Background="#050505" BorderBrush="#1C1C1C" BorderThickness="1" CornerRadius="4" ClipToBounds="True">
-                        <Viewbox Stretch="Uniform">
-                            <Grid x:Name="CanvasContainerGrid" Width="1920" Height="1080">
-                                <!-- Compositor Live Output Image -->
-                                <Image x:Name="CanvasLiveImage" Stretch="Fill"/>
+                    <!-- Live Viewport Container (border color doubles as stream health indicator) -->
+                    <Border Grid.Row="1" x:Name="PreviewViewportBorder" Background="#050505" BorderBrush="#1C1C1C" BorderThickness="2" CornerRadius="4" ClipToBounds="True">
+                        <Grid>
+                            <!-- Single View Mode (Default) -->
+                            <Viewbox x:Name="SingleCanvasViewbox" Stretch="Uniform" Visibility="Visible">
+                                <Grid x:Name="CanvasContainerGrid" Width="1920" Height="1080">
+                                    <!-- Compositor Live Output Image -->
+                                    <Image x:Name="CanvasLiveImage" Stretch="Fill"/>
 
-                                <!-- Interactive Transform Gizmo & Safe Area Overlay -->
-                                <ui:CanvasGizmoOverlay x:Name="CanvasGizmo"/>
+                                    <!-- Interactive Transform Gizmo & Safe Area Overlay -->
+                                    <ui:CanvasGizmoOverlay x:Name="CanvasGizmo"/>
+                                </Grid>
+                            </Viewbox>
+
+                            <!-- Studio Dual View Mode (Preview on Left, Program on Right) -->
+                            <Grid x:Name="StudioDualGrid" Visibility="Collapsed" Margin="4">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="140"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <!-- Left: Preview (Staged) -->
+                                <Border Grid.Column="0" Background="#0B0B0E" BorderBrush="#333333" BorderThickness="1" CornerRadius="4">
+                                    <Grid>
+                                        <TextBlock Text="PREVIEW (STAGING)" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="8,6" FontSize="10" FontWeight="Bold" Foreground="#888888" Panel.ZIndex="10"/>
+                                        <Viewbox Stretch="Uniform" Margin="2,22,2,2">
+                                            <Grid Width="1920" Height="1080">
+                                                <Image x:Name="StudioPreviewImage" Stretch="Fill"/>
+                                                <ui:CanvasGizmoOverlay x:Name="StudioCanvasGizmo"/>
+                                            </Grid>
+                                        </Viewbox>
+                                    </Grid>
+                                </Border>
+
+                                <!-- Center: ATEM Broadcast T-Bar Deck -->
+                                <ui:AtemTBarControl x:Name="AtemSwitcher" Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="4,0"/>
+
+                                <!-- Right: Program (Live Broadcast) -->
+                                <Border Grid.Column="2" Background="#0B0B0E" BorderBrush="#ef4444" BorderThickness="1" CornerRadius="4">
+                                    <Grid>
+                                        <TextBlock Text="PROGRAM (LIVE)" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="8,6" FontSize="10" FontWeight="Bold" Foreground="#ef4444" Panel.ZIndex="10"/>
+                                        <Viewbox Stretch="Uniform" Margin="2,22,2,2">
+                                            <Grid Width="1920" Height="1080">
+                                                <Image x:Name="StudioProgramImage" Stretch="Fill"/>
+                                            </Grid>
+                                        </Viewbox>
+                                    </Grid>
+                                </Border>
                             </Grid>
-                        </Viewbox>
+                        </Grid>
                     </Border>
                 </Grid>
             </Border>
@@ -272,7 +352,7 @@
                     <Border Grid.Row="0" Background="{StaticResource PanelHeaderBg}" Padding="6,0">
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                             <Button x:Name="BtnTabInspector" Content="PROPERTIES" Padding="8,4" Margin="0,0,4,0" Background="#242424" BorderBrush="#444444" Foreground="#FFFFFF" FontWeight="Bold" FontSize="10" Click="OnTabInspectorClicked"/>
-                            <Button x:Name="BtnTabChat" Content="💬 CHAT &amp; ALERTS" Padding="8,4" Background="Transparent" BorderBrush="Transparent" Foreground="#888888" FontSize="10" Click="OnTabChatClicked"/>
+                            <Button x:Name="BtnTabChat" Content="CHAT &amp; ALERTS" Padding="8,4" Background="Transparent" BorderBrush="Transparent" Foreground="#888888" FontSize="10" Click="OnTabChatClicked"/>
                         </StackPanel>
                     </Border>
 
@@ -290,8 +370,18 @@
                         <!-- Inspector Body -->
                         <ScrollViewer x:Name="InspectorScrollViewer" VerticalScrollBarVisibility="Auto" Padding="12">
                         <StackPanel x:Name="InspectorPanel">
-                            <!-- Selected Source Title -->
-                            <TextBlock x:Name="TxtInspectorSourceName" Text="No Source Selected" FontSize="14" FontWeight="Bold" Foreground="#FFFFFF" Margin="0,0,0,12"/>
+                            <!-- Selected Source Title (editable) -->
+                            <Grid Margin="0,0,0,12">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBox x:Name="TxtInspectorSourceName" Text="No Source Selected" FontSize="13" FontWeight="SemiBold"
+                                         Background="#0A0A0A" BorderBrush="#222222" TextChanged="OnInspectorRenameChanged"
+                                         ToolTip="Rename this source"/>
+                                <Button Grid.Column="1" x:Name="BtnApplyRename" Content="✓" Width="30" Margin="4,0,0,0" Padding="0"
+                                        Visibility="Collapsed" FontWeight="Bold" ToolTip="Apply rename" Click="OnApplyRenameClicked"/>
+                            </Grid>
 
                             <!-- TRANSFORM SECTION -->
                             <Border Background="{StaticResource CardBg}" BorderBrush="{StaticResource BorderDark}" BorderThickness="1" CornerRadius="4" Padding="12" Margin="0,0,0,12">
@@ -339,11 +429,91 @@
                                         <TextBlock Grid.Column="2" x:Name="TxtPropOpacityVal" Text="100%" FontSize="11" TextAlignment="Right" VerticalAlignment="Center" Foreground="{StaticResource TextSecondary}"/>
                                     </Grid>
 
+                                    <Grid Margin="0,0,0,10">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="65"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="45"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="Rotation" FontSize="11" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Center"/>
+                                        <Slider Grid.Column="1" x:Name="SliderPropRotation" Minimum="-180" Maximum="180" Value="0" ValueChanged="OnRotationPropChanged"/>
+                                        <TextBlock Grid.Column="2" x:Name="TxtPropRotationVal" Text="0°" FontSize="11" TextAlignment="Right" VerticalAlignment="Center" Foreground="{StaticResource TextSecondary}"/>
+                                    </Grid>
+
                                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,4,0,0">
                                         <Button Content="Fit Screen" Padding="10,4" FontSize="11" Margin="0,0,4,0" ToolTip="Stretch source to fit full canvas dimensions" Click="OnFitSourceToScreenClicked"/>
                                         <Button Content="Center" Padding="10,4" FontSize="11" Margin="0,0,4,0" ToolTip="Center source inside canvas" Click="OnCenterSourceClicked"/>
-                                        <Button Content="Reset" Padding="10,4" FontSize="11" ToolTip="Reset position and size to default" Click="OnResetTransformClicked"/>
+                                        <Button Content="Reset" Padding="10,4" FontSize="11" ToolTip="Reset rotation and opacity to default" Click="OnResetTransformClicked"/>
                                     </StackPanel>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- CROP SECTION -->
+                            <Border Background="{StaticResource CardBg}" BorderBrush="{StaticResource BorderDark}" BorderThickness="1" CornerRadius="4" Padding="12" Margin="0,0,0,12">
+                                <StackPanel>
+                                    <TextBlock Text="CROP (PIXELS FROM EACH EDGE)" FontSize="10" FontWeight="Bold" Foreground="#AAAAAA" Margin="0,0,0,10"/>
+
+                                    <Grid Margin="0,0,0,8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Column="0" Margin="0,0,4,0">
+                                            <TextBlock Text="LEFT" FontSize="10" Foreground="{StaticResource TextSecondary}" Margin="0,0,0,3"/>
+                                            <TextBox x:Name="TxtPropCropL" Text="0" TextChanged="OnCropPropChanged"/>
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="1" Margin="4,0,0,0">
+                                            <TextBlock Text="TOP" FontSize="10" Foreground="{StaticResource TextSecondary}" Margin="0,0,0,3"/>
+                                            <TextBox x:Name="TxtPropCropT" Text="0" TextChanged="OnCropPropChanged"/>
+                                        </StackPanel>
+                                    </Grid>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Column="0" Margin="0,0,4,0">
+                                            <TextBlock Text="RIGHT" FontSize="10" Foreground="{StaticResource TextSecondary}" Margin="0,0,0,3"/>
+                                            <TextBox x:Name="TxtPropCropR" Text="0" TextChanged="OnCropPropChanged"/>
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="1" Margin="4,0,0,0">
+                                            <TextBlock Text="BOTTOM" FontSize="10" Foreground="{StaticResource TextSecondary}" Margin="0,0,0,3"/>
+                                            <TextBox x:Name="TxtPropCropB" Text="0" TextChanged="OnCropPropChanged"/>
+                                        </StackPanel>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- TEXT PROPERTIES (Text sources only) -->
+                            <Border x:Name="PanelTextProps" Background="{StaticResource CardBg}" BorderBrush="{StaticResource BorderDark}" BorderThickness="1" CornerRadius="4" Padding="12" Margin="0,0,0,12" Visibility="Collapsed">
+                                <StackPanel>
+                                    <TextBlock Text="TEXT CONTENT" FontSize="10" FontWeight="Bold" Foreground="#AAAAAA" Margin="0,0,0,10"/>
+                                    <TextBox x:Name="TxtPropTextContent" Text="" TextChanged="OnTextContentPropChanged" Margin="0,0,0,8"/>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel>
+                                            <TextBlock Text="FONT SIZE (PX)" FontSize="10" Foreground="{StaticResource TextSecondary}" Margin="0,0,0,3"/>
+                                            <TextBox x:Name="TxtPropFontSize" Text="44" TextChanged="OnTextContentPropChanged"/>
+                                        </StackPanel>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- CAMERA CONTROLS (Webcam sources only) -->
+                            <Border x:Name="PanelCameraControls" Background="{StaticResource CardBg}" BorderBrush="{StaticResource BorderDark}" BorderThickness="1" CornerRadius="4" Padding="12" Margin="0,0,0,12" Visibility="Collapsed">
+                                <StackPanel>
+                                    <TextBlock Text="CAMERA" FontSize="10" FontWeight="Bold" Foreground="#AAAAAA" Margin="0,0,0,8"/>
+                                    <CheckBox x:Name="ChkPropFlipH" Content="Mirror horizontally" Foreground="#CCCCCC" Checked="OnFlipPropChanged" Unchecked="OnFlipPropChanged"/>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- PHONE RECONNECT (Phone sources only) -->
+                            <Border x:Name="PanelPhoneReconnect" Background="{StaticResource CardBg}" BorderBrush="{StaticResource BorderDark}" BorderThickness="1" CornerRadius="4" Padding="12" Margin="0,0,0,12" Visibility="Collapsed">
+                                <StackPanel>
+                                    <TextBlock Text="PHONE CAMERA" FontSize="10" FontWeight="Bold" Foreground="#AAAAAA" Margin="0,0,0,8"/>
+                                    <Button Content="Reconnect Stream" Padding="10,4" HorizontalAlignment="Left" ToolTip="Reconnect to the phone camera MJPEG stream" Click="OnReconnectPhoneClicked"/>
                                 </StackPanel>
                             </Border>
 
@@ -545,13 +715,19 @@
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="AUDIO MIXER" FontSize="11" FontWeight="Bold" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Center" Margin="0,0,10,0"/>
                                     <!-- Quick Streamer Soundboard Triggers -->
-                                    <Button Content="📢 Horn" Padding="6,2" FontSize="10" Margin="0,0,3,0" ToolTip="Play Airhorn SFX into Stream" Click="OnSfxAirhornClicked"/>
-                                    <Button Content="🏆 Win" Padding="6,2" FontSize="10" Margin="0,0,3,0" ToolTip="Play Victory Chime SFX into Stream" Click="OnSfxVictoryClicked"/>
-                                    <Button Content="⚡ Level" Padding="6,2" FontSize="10" Margin="0,0,3,0" ToolTip="Play Level Up SFX into Stream" Click="OnSfxLevelUpClicked"/>
-                                    <Button Content="💥 Laser" Padding="6,2" FontSize="10" Margin="0,0,3,0" ToolTip="Play Laser Beam SFX into Stream" Click="OnSfxLaserClicked"/>
-                                    <Button Content="❌ Buzz" Padding="6,2" FontSize="10" Margin="0,0,3,0" ToolTip="Play Buzzer SFX into Stream" Click="OnSfxBuzzerClicked"/>
+                                    <Button Content="Horn" Padding="6,2" FontSize="10" Margin="0,0,3,0" ToolTip="Play Airhorn SFX into Stream" Click="OnSfxAirhornClicked"/>
+                                    <Button Content="Win" Padding="6,2" FontSize="10" Margin="0,0,3,0" ToolTip="Play Victory Chime SFX into Stream" Click="OnSfxVictoryClicked"/>
+                                    <Button Content="Level" Padding="6,2" FontSize="10" Margin="0,0,3,0" ToolTip="Play Level Up SFX into Stream" Click="OnSfxLevelUpClicked"/>
+                                    <Button Content="Laser" Padding="6,2" FontSize="10" Margin="0,0,3,0" ToolTip="Play Laser Beam SFX into Stream" Click="OnSfxLaserClicked"/>
+                                    <Button Content="Buzz" Padding="6,2" FontSize="10" Margin="0,0,3,0" ToolTip="Play Buzzer SFX into Stream" Click="OnSfxBuzzerClicked"/>
+                                    <Button Content="Clap" Padding="6,2" FontSize="10" Margin="0,0,3,0" ToolTip="Play Applause SFX into Stream" Click="OnSfxApplauseClicked"/>
+                                    <CheckBox x:Name="ChkAutoClipper" Content="AI Clip" Foreground="#888888" FontSize="10" Margin="0,0,3,0" VerticalAlignment="Center"
+                                              ToolTip="AI Auto-Clipper: when your audio peaks with excitement, automatically save a 9:16 vertical clip" Checked="OnAutoClipperToggled" Unchecked="OnAutoClipperToggled"/>
                                 </StackPanel>
-                                <Button Content="DSP Effects Rack" HorizontalAlignment="Right" Padding="10,4" FontSize="11" ToolTip="Configure Voice Presets, Noise Gate, EQ, Compressor &amp; Limiter" Click="OnOpenAudioRackClicked"/>
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                    <Button Content="Pop Out" Padding="6,2" FontSize="10" Margin="0,0,6,0" ToolTip="Detach Audio Mixer into Floating Window (Multi-Monitor)" Click="OnUndockMixerClicked"/>
+                                    <Button Content="DSP Effects Rack" Padding="10,4" FontSize="11" ToolTip="Configure Voice Presets, Noise Gate, EQ, Compressor &amp; Limiter" Click="OnOpenAudioRackClicked"/>
+                                </StackPanel>
                             </Grid>
                         </Border>
 
@@ -573,10 +749,12 @@
                                     <!-- Header -->
                                     <Grid Grid.Row="0">
                                         <StackPanel Orientation="Horizontal">
-                                            <TextBlock Text="Microphone Input" FontSize="12" FontWeight="SemiBold" Foreground="#FFFFFF"/>
+                                            <TextBlock x:Name="TxtMicHeader" Text="Microphone Input" FontSize="12" FontWeight="SemiBold" Foreground="#FFFFFF"/>
                                             <Border x:Name="BadgeVoiceChanger" Background="#1A1A1A" BorderBrush="#333333" BorderThickness="1" CornerRadius="3" Padding="4,1" Margin="8,0,0,0">
                                                 <TextBlock x:Name="TxtVoicePresetLabel" Text="Clean" FontSize="9" FontWeight="Bold" Foreground="#FFFFFF"/>
                                             </Border>
+                                            <CheckBox x:Name="ChkMonitorMic" Content="Monitor" Foreground="#888888" FontSize="10" Margin="10,0,0,0" VerticalAlignment="Center"
+                                                      ToolTip="Hear your processed microphone in your headphones (exactly what the audience hears)" Checked="OnMonitorToggled" Unchecked="OnMonitorToggled"/>
                                         </StackPanel>
                                         <TextBlock x:Name="TxtMicLevelDb" Text="-60.0 dB" HorizontalAlignment="Right" FontSize="11" Foreground="#FFFFFF" FontWeight="Bold"/>
                                     </Grid>
@@ -608,7 +786,7 @@
                                     </Grid.RowDefinitions>
 
                                     <Grid Grid.Row="0">
-                                        <TextBlock Text="Desktop / Game Audio" FontSize="12" FontWeight="SemiBold" Foreground="#FFFFFF"/>
+                                        <TextBlock x:Name="TxtDesktopHeader" Text="Desktop / Game Audio" FontSize="12" FontWeight="SemiBold" Foreground="#FFFFFF"/>
                                         <TextBlock x:Name="TxtDesktopLevelDb" Text="-60.0 dB" HorizontalAlignment="Right" FontSize="11" Foreground="#FFFFFF" FontWeight="Bold"/>
                                     </Grid>
 
@@ -673,8 +851,21 @@
             </Grid>
         </Border>
 
+        <!-- ==================== 3.5 STREAM HEALTH ASSISTANT & LIVE TROUBLESHOOTING ==================== -->
+        <Border Grid.Row="3" Background="#0C0A14" BorderBrush="{StaticResource BorderDark}" BorderThickness="0,1,0,0" Padding="14,0">
+            <Grid VerticalAlignment="Center">
+                <StackPanel Orientation="Horizontal">
+                    <Border Background="#1C1428" BorderBrush="#7C3AED" BorderThickness="1" CornerRadius="4" Padding="6,1" Margin="0,0,10,0">
+                        <TextBlock Text="STREAM ASSISTANT" FontSize="9" FontWeight="Bold" Foreground="#C084FC"/>
+                    </Border>
+                    <TextBlock x:Name="TxtDiagnosticTip" Text="Hardware &amp; Direct3D engine healthy. Zero dropped frames." FontSize="11" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Center"/>
+                </StackPanel>
+                <Button x:Name="BtnQuickFix" Content="1-Click Fix: Lower Bitrate" HorizontalAlignment="Right" Padding="8,2" FontSize="10" Visibility="Collapsed" Click="OnQuickFixClicked"/>
+            </Grid>
+        </Border>
+
         <!-- ==================== 4. FOOTER TELEMETRY STATUS BAR ==================== -->
-        <Border Grid.Row="3" Background="#050505" BorderBrush="{StaticResource BorderDark}" BorderThickness="0,1,0,0" Padding="12,0">
+        <Border Grid.Row="4" Background="#050505" BorderBrush="{StaticResource BorderDark}" BorderThickness="0,1,0,0" Padding="12,0">
             <Grid VerticalAlignment="Center">
                 <StackPanel Orientation="Horizontal">
                     <TextBlock x:Name="TxtStatusFps" Text="FPS: 60.0" FontSize="10" Foreground="#FFFFFF" FontWeight="Bold" Margin="0,0,16,0"/>
@@ -685,6 +876,9 @@
                 </StackPanel>
 
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <TextBlock x:Name="TxtAutoTier" Text="Auto: detecting…" FontSize="10" Foreground="#888888"
+                               FontWeight="SemiBold" Margin="0,0,12,0"
+                               ToolTip="Ramaverse auto-tuned the engine to this machine's hardware"/>
                     <TextBlock Text="Ready" FontSize="10" Foreground="#888888" FontWeight="SemiBold"/>
                 </StackPanel>
             </Grid>

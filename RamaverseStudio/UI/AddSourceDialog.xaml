@@ -60,6 +60,7 @@
                     </ListBox.ItemContainerStyle>
                     <ListBoxItem Content="Display Capture" Tag="DisplayCapture" IsSelected="True"/>
                     <ListBoxItem Content="Window Capture" Tag="WindowCapture"/>
+                    <ListBoxItem Content="Browser Source (Streamlabs / Alerts)" Tag="BrowserSource"/>
                     <ListBoxItem Content="Camera / Capture Card" Tag="VideoCaptureDevice"/>
                     <ListBoxItem Content="Phone Camera (Wireless / IP)" Tag="PhoneCamera"/>
                     <ListBoxItem Content="Media Video File" Tag="MediaFile"/>
@@ -101,6 +102,29 @@
                             <Button Content="Refresh List" HorizontalAlignment="Right" Padding="6,2" FontSize="10" Click="OnRefreshWindowsClicked"/>
                         </Grid>
                         <ComboBox x:Name="ComboWindows" Margin="0,0,0,12"/>
+                    </StackPanel>
+
+                    <!-- Panel for Browser Source -->
+                    <StackPanel x:Name="PanelBrowserSource" Visibility="Collapsed">
+                        <TextBlock Text="URL (STREAMLABS / STREAMELEMENTS / WEB WIDGET)" FontSize="10" FontWeight="Bold" Foreground="#888888" Margin="0,0,0,5"/>
+                        <TextBox x:Name="TxtBrowserUrl" Text="https://streamlabs.com/alert-box/v3/YOUR_TOKEN" Margin="0,0,0,10"/>
+                        <Grid Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0" Margin="0,0,6,0">
+                                <TextBlock Text="WIDTH (PX)" FontSize="10" Foreground="#888888" Margin="0,0,0,3"/>
+                                <TextBox x:Name="TxtBrowserWidth" Text="1920"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="1" Margin="6,0,0,0">
+                                <TextBlock Text="HEIGHT (PX)" FontSize="10" Foreground="#888888" Margin="0,0,0,3"/>
+                                <TextBox x:Name="TxtBrowserHeight" Text="1080"/>
+                            </StackPanel>
+                        </Grid>
+                        <TextBlock Text="CUSTOM CSS" FontSize="10" FontWeight="Bold" Foreground="#888888" Margin="0,0,0,5"/>
+                        <TextBox x:Name="TxtCustomCss" Text="body { background-color: rgba(0, 0, 0, 0); margin: 0px auto; overflow: hidden; }" Height="60" TextWrapping="Wrap" AcceptsReturn="True" Margin="0,0,0,8"/>
+                        <CheckBox x:Name="ChkBrowserRefreshOnScene" Content="Refresh browser when scene becomes active" IsChecked="True"/>
                     </StackPanel>
 
                     <!-- Panel for Video Capture Device -->
