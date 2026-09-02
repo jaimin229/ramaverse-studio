@@ -32,16 +32,16 @@ export default function DownloadModal({ isOpen, onClose }) {
           Download Ramaverse Studio v1.3.0
         </h3>
         <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', lineHeight: 1.5, marginBottom: '24px' }}>
-          Standalone Windows 64-bit package. Extract the folder and launch <code className="mono" style={{ color: '#FFF' }}>RamaverseStudio.exe</code>.
+          Single-file standalone Windows 64-bit executable. Double-click to launch immediately without unzipping or installer clutter.
         </p>
 
         <a
-          href="https://github.com/jaimin229/ramaverse-studio/releases/download/v1.3.0/RamaverseStudio-v1.3.0-win-x64.zip"
+          href="https://github.com/jaimin229/ramaverse-studio/releases/download/v1.3.0/RamaverseStudio-v1.3.0-Setup.exe"
           className="btn btn-primary"
           style={{ width: '100%', padding: '14px', fontSize: '0.95rem', marginBottom: '14px' }}
           download
         >
-          Download RamaverseStudio-v1.3.0.zip (Direct)
+          Download RamaverseStudio-v1.3.0-Setup.exe (Direct)
         </a>
 
         <div style={{ background: 'var(--bg-void)', border: '1px solid var(--border-subtle)', borderRadius: '6px', padding: '14px', marginBottom: '20px' }}>
