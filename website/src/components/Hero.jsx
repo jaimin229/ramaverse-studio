@@ -43,7 +43,7 @@ export default function Hero({ onOpenModal }) {
         <div style={{ marginBottom: '22px' }}>
           <span className="data-badge" style={{ padding: '6px 14px' }}>
             <span className="tally-dot red"></span>
-            <span>Version 1.2.0 Beta • Native Windows x64 • Single 73 MB Binary</span>
+            <span>Version 1.3.0 Pro • Native Windows x64 • Instant Hardware Acceleration</span>
           </span>
         </div>
 
@@ -68,7 +68,7 @@ export default function Hero({ onOpenModal }) {
           maxWidth: '700px',
           margin: '0 auto 34px auto'
         }}>
-          A 100% native Windows broadcasting studio built in C#. Direct GPU surface capture that won't drop in-game frames, an integrated 5-stage audio DSP chain, and crash-resilient recording.
+          A 100% native Windows broadcasting studio built in C#. Direct GPU surface capture that won't drop in-game frames, Blackmagic ATEM T-Bar staging, 5-stage audio DSP chain, and crash-resilient recording.
         </p>
 
         {/* CTA Button Array */}
@@ -85,15 +85,17 @@ export default function Hero({ onOpenModal }) {
             className="btn btn-luminous-purple"
             style={{ fontSize: '1rem', padding: '12px 28px' }}
           >
-            Download Free Beta (v1.2)
+            Download Free (v1.3.0)
           </button>
           
           <a
-            href="#demo"
+            href="https://jaimin229.gumroad.com/l/ramaverse-studio-pro"
+            target="_blank"
+            rel="noreferrer"
             className="btn btn-glass-secondary"
-            style={{ fontSize: '1rem', padding: '12px 26px' }}
+            style={{ fontSize: '1rem', padding: '12px 26px', borderColor: '#7C3AED', color: '#FFF' }}
           >
-            Explore Master Control ↓
+            Get Pro Lifetime ($49) →
           </a>
         </div>
 

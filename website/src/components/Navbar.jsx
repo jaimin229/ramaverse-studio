@@ -14,7 +14,7 @@ export default function Navbar({ onOpenModal }) {
             className="nav-logo-icon"
           />
           <span>RAMAVERSE STUDIO</span>
-          <span className="brand-badge">BETA v1.2</span>
+          <span className="brand-badge">v1.3.0 PRO</span>
         </a>
 
         {/* Desktop Links */}
@@ -23,6 +23,7 @@ export default function Navbar({ onOpenModal }) {
             <li><a href="#demo" className="nav-link">Studio Tour</a></li>
             <li><a href="#features" className="nav-link">Features</a></li>
             <li><a href="#benchmarks" className="nav-link">Benchmarks</a></li>
+            <li><a href="https://jaimin229.gumroad.com/l/ramaverse-studio-pro" target="_blank" rel="noreferrer" className="nav-link" style={{ color: '#C084FC', fontWeight: 600 }}>Get Pro ($49)</a></li>
             <li><a href="#faq" className="nav-link">FAQ</a></li>
           </ul>
         </nav>
@@ -34,7 +35,7 @@ export default function Navbar({ onOpenModal }) {
             className="btn btn-luminous-purple"
             style={{ fontSize: '0.84rem', padding: '8px 18px' }}
           >
-            Join the Beta
+            Download Free
           </button>
 
           {/* Mobile Hamburger Button */}

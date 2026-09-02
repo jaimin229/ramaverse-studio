@@ -62,15 +62,15 @@ export default function AccessModal({ isOpen, onClose }) {
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
               <span className="tally-dot green"></span>
               <span style={{ fontSize: '0.76rem', fontFamily: 'var(--font-mono)', color: 'var(--accent-electric)' }}>
-                CLOSED BETA ENROLLMENT
+                PRODUCTION RELEASE v1.3.0
               </span>
             </div>
 
             <h3 id="modal-title" style={{ fontSize: '1.4rem', fontWeight: 800, marginBottom: '8px', color: '#FFF' }}>
-              Download Ramaverse Studio Beta
+              Download Ramaverse Studio v1.3.0
             </h3>
             <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', marginBottom: '20px', lineHeight: 1.5 }}>
-              Enter your email to receive direct download links for the Windows x64 portable executable (v1.2) and join the creator Discord.
+              Download the standalone Windows x64 package (v1.3.0). Complete with Blackmagic ATEM T-Bar staging, DirectShow virtual camera, and hardware NVENC recording.
             </p>
 
             <form onSubmit={handleSubmit}>
@@ -108,12 +108,12 @@ export default function AccessModal({ isOpen, onClose }) {
                 className="btn btn-luminous-purple"
                 style={{ width: '100%', padding: '12px', marginTop: '8px', fontSize: '0.95rem' }}
               >
-                Request Download Link →
+                Download Free Package (Win x64) →
               </button>
             </form>
 
             <div style={{ marginTop: '16px', fontSize: '0.72rem', color: 'var(--text-muted)', textAlign: 'center', fontFamily: 'var(--font-mono)' }}>
-              🔒 Zero spam. We only send build update logs and critical security notices.
+              100% Native Windows • No bloat • Clean portable executable
             </div>
           </div>
         ) : (
@@ -134,18 +134,32 @@ export default function AccessModal({ isOpen, onClose }) {
               ✓
             </div>
             <h3 style={{ fontSize: '1.3rem', fontWeight: 800, marginBottom: '8px', color: '#FFF' }}>
-              Beta Access Requested!
+              Your Download Is Ready!
             </h3>
-            <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', marginBottom: '24px', lineHeight: 1.5 }}>
-              We've dispatched your Windows x64 build link and Discord invitation to <strong style={{ color: '#FFF' }}>{email}</strong>.
+            <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', marginBottom: '20px', lineHeight: 1.5 }}>
+              Click below to download Ramaverse Studio v1.3.0 directly for Windows 64-bit:
             </p>
-            <button
-              onClick={onClose}
-              className="btn btn-glass-secondary"
-              style={{ padding: '10px 24px', fontSize: '0.88rem' }}
+
+            <a
+              href="https://github.com/jaimin229/ramaverse-studio/releases/download/v1.3.0/RamaverseStudio-v1.3.0-win-x64.zip"
+              className="btn btn-luminous-purple"
+              style={{ display: 'inline-block', padding: '12px 28px', fontSize: '0.95rem', marginBottom: '12px' }}
+              download
             >
-              Done
-            </button>
+              Download RamaverseStudio-v1.3.0.zip
+            </a>
+
+            <div style={{ marginTop: '8px' }}>
+              <a
+                href="https://jaimin229.gumroad.com/l/ramaverse-studio-pro"
+                target="_blank"
+                rel="noreferrer"
+                className="btn btn-glass-secondary"
+                style={{ display: 'inline-block', padding: '10px 20px', fontSize: '0.85rem' }}
+              >
+                Get Pro License Key ($49) →
+              </a>
+            </div>
           </div>
         )}
       </div>
