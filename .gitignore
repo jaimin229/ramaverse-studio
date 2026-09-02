@@ -20,3 +20,8 @@ ehthumbs.db
 Desktop.ini
 $RECYCLE.BIN/
 .DS_Store
+
+# Web & Distribution
+node_modules/
+dist/
+.mimosa/
