@@ -17,55 +17,53 @@ export default function DownloadModal({ isOpen, onClose }) {
   if (!isOpen) return null;
 
   return (
-    <div className="modal-overlay" onClick={onClose} role="dialog" aria-modal="true">
-      <div className="modal-box" onClick={(e) => e.stopPropagation()}>
-        <button className="modal-close" onClick={onClose} aria-label="Close modal">&times;</button>
+    <div className="modal-backdrop" onClick={onClose} role="dialog" aria-modal="true">
+      <div className="modal-content-card" onClick={(e) => e.stopPropagation()}>
+        <button className="modal-close-btn" onClick={onClose} aria-label="Close modal">&times;</button>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
-          <span className="beacon ready"></span>
-          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: 'var(--accent-light)' }}>
-            DIRECT WINDOWS RELEASE
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px' }}>
+          <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#10B981' }}></span>
+          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.74rem', color: 'var(--accent-bright)' }}>
+            DIRECT WINDOWS EXECUTABLE
           </span>
         </div>
 
         <h3 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#FFF', marginBottom: '8px' }}>
           Download Ramaverse Studio v1.3.0
         </h3>
-        <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', lineHeight: 1.5, marginBottom: '24px' }}>
-          Direct Windows 64-bit production package. Extract and launch <code className="mono" style={{ color: '#FFF' }}>RamaverseStudio.exe</code>.
+        <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', lineHeight: 1.5, marginBottom: '22px' }}>
+          Single standalone executable (<code className="mono" style={{ color: '#FFF' }}>RamaverseStudio-v1.3.0-Setup.exe</code>). Direct single-click execution with no ZIP extraction needed.
         </p>
 
         <a
-          href="https://github.com/jaimin229/ramaverse-studio/releases/download/v1.3.0/RamaverseStudio-win-x64.zip"
-          className="btn btn-primary"
-          style={{ width: '100%', padding: '14px', fontSize: '0.95rem', marginBottom: '14px' }}
+          href="/downloads/RamaverseStudio-v1.3.0-Setup.exe"
+          className="btn-hw btn-hw-primary"
+          style={{ width: '100%', padding: '14px', fontSize: '0.96rem', marginBottom: '16px', textAlign: 'center' }}
           download
         >
-          Download RamaverseStudio-v1.3.0 (Direct)
+          Download RamaverseStudio-Setup.exe (78.9 MB)
         </a>
 
-        <div style={{ background: 'var(--bg-void)', border: '1px solid var(--border-subtle)', borderRadius: '6px', padding: '14px', marginBottom: '20px' }}>
-          <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.72rem', color: 'var(--text-dim)', marginBottom: '4px' }}>
+        <div style={{ background: '#050308', border: '1px solid var(--border-hairline)', borderRadius: '6px', padding: '12px', marginBottom: '20px' }}>
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'var(--text-dim)', marginBottom: '4px' }}>
             SYSTEM REQUIREMENTS
           </div>
-          <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-            • Windows 10 / Windows 11 (64-bit)<br />
-            • DirectX 11 Compatible GPU (NVIDIA NVENC, AMD AMF, Intel QSV supported)<br />
-            • 4 GB RAM minimum (8 GB recommended)
+          <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+            • Windows 10 / Windows 11 (64-Bit)<br />
+            • DirectX 11 GPU (NVENC, AMF, QSV Hardware Supported)<br />
+            • Single File • Zero System Pollution
           </div>
         </div>
 
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-            Have a Pro License Key?
-          </span>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.8rem' }}>
+          <span style={{ color: 'var(--text-dim)' }}>Need Pro Edition?</span>
           <a
             href="https://jaimin229.gumroad.com/l/ramaverse-studio-pro"
             target="_blank"
             rel="noreferrer"
-            style={{ fontSize: '0.78rem', color: 'var(--accent-light)', textDecoration: 'underline' }}
+            style={{ color: 'var(--accent-bright)', fontWeight: 600, textDecoration: 'underline' }}
           >
-            Purchase Pro ($49) →
+            Get Pro Lifetime Key ($49) →
           </a>
         </div>
       </div>

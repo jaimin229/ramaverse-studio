@@ -1,31 +1,29 @@
 import React, { useState } from 'react';
 import Navbar from './components/Navbar';
-import Hero from './components/Hero';
-import Architecture from './components/Architecture';
-import AudioRackPreview from './components/AudioRackPreview';
-import Pricing from './components/Pricing';
+import LiveConsoleHero from './components/LiveConsoleHero';
+import WorkflowsSection from './components/WorkflowsSection';
+import PricingSection from './components/PricingSection';
 import Footer from './components/Footer';
 import DownloadModal from './components/DownloadModal';
 
 export default function App() {
-  const [downloadModalOpen, setDownloadModalOpen] = useState(false);
+  const [downloadOpen, setDownloadOpen] = useState(false);
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'var(--bg-void)' }}>
-      <Navbar onOpenDownload={() => setDownloadModalOpen(true)} />
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'var(--bg-deep)' }}>
+      <Navbar onOpenDownload={() => setDownloadOpen(true)} />
 
       <main style={{ flex: 1 }}>
-        <Hero onOpenDownload={() => setDownloadModalOpen(true)} />
-        <Architecture />
-        <AudioRackPreview />
-        <Pricing onOpenDownload={() => setDownloadModalOpen(true)} />
+        <LiveConsoleHero onOpenDownload={() => setDownloadOpen(true)} />
+        <WorkflowsSection />
+        <PricingSection onOpenDownload={() => setDownloadOpen(true)} />
       </main>
 
       <Footer />
 
       <DownloadModal
-        isOpen={downloadModalOpen}
-        onClose={() => setDownloadModalOpen(false)}
+        isOpen={downloadOpen}
+        onClose={() => setDownloadOpen(false)}
       />
     </div>
   );
